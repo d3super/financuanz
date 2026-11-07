@@ -52,6 +52,7 @@ th{color:var(--mut);text-align:left;font-weight:600;padding:8px 6px}td{padding:1
 @media(prefers-reduced-motion:no-preference){.sh{animation:up .25s ease}@keyframes up{from{transform:translateY(30px);opacity:0}}}
 .spl{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.spl .logoimg{width:104px;height:104px;margin-bottom:18px}.ld{width:150px;height:4px;border-radius:4px;background:var(--inp);overflow:hidden;margin:22px auto 10px}.ld i{display:block;width:40%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--org),var(--ac))}
 @media(prefers-reduced-motion:no-preference){.spl .logoimg{animation:pls 1.8s ease-in-out infinite}.ld i{animation:ldm 1.1s ease-in-out infinite}@keyframes pls{50%{transform:scale(1.06)}}@keyframes ldm{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}}
+.pie svg{display:block;width:220px;max-width:100%;margin:4px auto 12px;overflow:visible}.pie circle{cursor:pointer;transition:stroke-width .2s,opacity .2s}.pie .lg{padding:8px 10px;border-radius:12px;cursor:pointer;align-items:center}.pie .lg.sel{background:var(--inp)}.pie .seg{margin-bottom:6px}
 </style></head><body><div id="app"></div><div id="toast" hidden></div>
 <script>
 const API='https://script.google.com/macros/s/AKfycbw9W2FZ6SItwlhQH00iy-CFAZoINhhz6emE2ubYX3IeF4tOPnh98Gx7ZYWWDVmwmSk0/exec';  // <- tempel URL Web App Apps Script di sini
@@ -172,6 +173,29 @@ function shell(){
 function go(p){S.page=p;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id==='n_'+p));$('#v').innerHTML={dash,port,hist,set}[p]();window.scrollTo(0,0);}
 const refresh=async()=>{try{await load();go(S.page);}catch(e){toast(e.message,false);}};
 function head(){const p=S.d.profil;return`<div class="row" style="margin-bottom:16px"><div class="row"><div class="ava" onclick="profView()" style="${p.foto?`background-image:url(${p.foto})`:''}">${p.foto?'':esc(p.nama[0])}</div><div><div class="mut">Halo,</div><b>${esc(p.nama)}</b></div></div><div class="row"><button class="ib" onclick="refresh()" aria-label="Muat ulang">↻</button><button class="ib" onclick="toggleTheme()" aria-label="Ganti tema">◐</button></div></div>`;}
+const PAL=['#EFC287','#E17807','#38bdf8','#34d399','#c084fc','#f472b6','#facc15'];
+S.pm='jenis';S.ps=-1;
+function pieData(c){
+ let L;
+ if(S.pm==='jenis')L=Object.entries(c.al).map(([j,v])=>({n:JN[j],v,c:WR[j]}));
+ else{L=c.hold.map(h=>({n:h.ticker,v:h.nilai}));if(c.kas>0)L.push({n:'Kas',v:c.kas,c:'#94a3b8'});
+  L.sort((a,b)=>b.v-a.v);if(L.length>7){const r=L.splice(6).reduce((a,x)=>a+x.v,0);L.push({n:'Lainnya',v:r,c:'#64748b'});}
+  let i=0;L.forEach(x=>{if(!x.c)x.c=PAL[i++%PAL.length];});}
+ return L.filter(x=>x.v>0).sort((a,b)=>(a.n==='Lainnya')-(b.n==='Lainnya')||b.v-a.v);
+}
+function pieCard(){
+ const c=calc(),D=pieData(c),T=D.reduce((a,x)=>a+x.v,0),seg=`<div class="seg">${[['jenis','Per jenis aset'],['aset','Per aset']].map(([k,l])=>`<button class="${S.pm===k?'on':''}" onclick="setPm('${k}')">${l}</button>`).join('')}</div>`;
+ if(!T)return`<div class="card pie" id="pie"><h4>Komposisi portofolio</h4><p class="mut">Belum ada aset. Rekam transaksi BUY untuk melihat komposisinya.</p></div>`;
+ const R=66,C=2*Math.PI*R;let off=0;
+ const sl=D.map((x,i)=>{const f=x.v/T,len=Math.max(0,f*C-(D.length>1?2:0)),sel=S.ps===i;
+  const e=`<circle cx="100" cy="100" r="${R}" fill="none" stroke="${x.c}" stroke-width="${sel?40:30}" stroke-dasharray="${len} ${C-len}" stroke-dashoffset="${-off}" transform="rotate(-90 100 100)" opacity="${S.ps>=0&&!sel?.35:1}" onclick="pick(${i})"/>`;off+=f*C;return e;}).join('');
+ const x=S.ps>=0?D[S.ps]:null,nm=s=>s.length>14?s.slice(0,13)+'…':s;
+ const mid=x?`<text x="100" y="90" text-anchor="middle" font-size="12" fill="var(--mut)">${esc(nm(x.n))}</text><text x="100" y="114" text-anchor="middle" font-size="24" font-weight="800" fill="var(--tx)">${nf.format(x.v/T*100)}%</text><text x="100" y="132" text-anchor="middle" font-size="11" fill="var(--mut)">${rp(x.v)}</text>`
+  :`<text x="100" y="95" text-anchor="middle" font-size="12" fill="var(--mut)">Total aset</text><text x="100" y="117" text-anchor="middle" font-size="17" font-weight="800" fill="var(--tx)">${rp(T)}</text><text x="100" y="134" text-anchor="middle" font-size="10" fill="var(--mut)">Ketuk bagian grafik</text>`;
+ return`<div class="card pie" id="pie"><h4>Komposisi portofolio</h4>${seg}<svg viewBox="0 0 200 200" role="img" aria-label="Pie chart komposisi portofolio">${sl}${mid}</svg>${D.map((d,i)=>`<div class="lg ${S.ps===i?'sel':''}" onclick="pick(${i})"><span><i style="background:${d.c}"></i>${esc(d.n)}</span><span><b>${nf.format(d.v/T*100)}%</b> <span class="mut">${rp(d.v)}</span></span></div>`).join('')}</div>`;
+}
+const setPm=m=>{S.pm=m;S.ps=-1;$('#pie').outerHTML=pieCard();};
+const pick=i=>{S.ps=S.ps===i?-1:i;$('#pie').outerHTML=pieCard();};
 function dash(){
  const c=calc(),W=300,Hh=110,m=c.ms,mx=Math.max(1,...m.map(x=>Math.max(x.v,x.now||0))),
  X=i=>m.length>1?i*(W/(m.length-1)):W/2,Y=v=>Hh-6-(v/mx)*(Hh-18),
@@ -181,7 +205,7 @@ function dash(){
  <div class="g2"><div class="card"><div class="mut">Total investasi</div><b>${rp(c.modal)}</b></div><div class="card"><div class="mut">Saldo kas</div><b class="${c.kas<0?'dn':''}">${rp(c.kas)}</b></div>
  <div class="card"><div class="mut">Profit/Loss berjalan</div><b class="${cl(c.fl)}">${rp(c.fl)}</b></div><div class="card"><div class="mut">Profit/Loss terealisasi</div><b class="${cl(c.re)}">${rp(c.re)}</b></div></div>
  <div class="card"><h4>Perkembangan bulanan</h4>${m.length?`<svg viewBox="0 0 ${W} ${Hh+16}" width="100%"><defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFC287" stop-opacity=".4"/><stop offset="1" stop-color="#EFC287" stop-opacity="0"/></linearGradient></defs><path d="${path} L${X(m.length-1)} ${Hh} L0 ${Hh}Z" fill="url(#ar)"/><path d="${path}" fill="none" stroke="#EFC287" stroke-width="2.2"/><circle cx="${X(m.length-1)}" cy="${Y(last.now)}" r="4.5" fill="#E17807"/><text x="0" y="${Hh+13}" font-size="9" fill="#9db2c4">${m[0].l}</text><text x="${W}" y="${Hh+13}" font-size="9" fill="#9db2c4" text-anchor="end">${last.l}</text></svg><div class="mut">Garis: modal berjalan. Titik oranye: nilai saat ini.</div>`:'<p class="mut">Grafik muncul setelah ada transaksi.</p>'}</div>
- <div class="card"><h4>Alokasi aset</h4><div class="bar">${Object.entries(c.al).map(([j,v])=>`<i style="flex:${v};background:${WR[j]}"></i>`).join('')}</div>${Object.entries(c.al).sort((a,b)=>b[1]-a[1]).map(([j,v])=>`<div class="lg"><span><i style="background:${WR[j]}"></i>${JN[j]}</span><b>${nf.format(v/c.tot*100)}%</b></div>`).join('')||'<p class="mut">Belum ada aset.</p>'}</div>
+ ${pieCard()}
  <div class="card"><h4>Insight &amp; rekomendasi</h4>${insights(c).map(i=>`<div class="ins"><b>${esc(i[0])}</b>${esc(i[1])}</div>`).join('')}</div>`;
 }
 function port(){
