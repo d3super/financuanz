@@ -44,10 +44,14 @@ th{color:var(--mut);text-align:left;font-weight:600;padding:8px 6px}td{padding:1
 #toast{position:fixed;top:calc(env(safe-area-inset-top) + 12px);left:50%;transform:translateX(-50%);padding:13px 20px;border-radius:14px;font-weight:700;z-index:50;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.3);max-width:90%}
 .au{max-width:380px;margin:auto;padding-top:8vh}.logo{font-size:30px;font-weight:800;letter-spacing:1px;color:var(--ac);margin-bottom:6px}
 .dots{display:flex;gap:14px;justify-content:center;margin:26px 0}.dots i{width:15px;height:15px;border-radius:50%;border:2px solid var(--ac)}.dots i.f{background:var(--ac)}
-.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.pad button{height:64px;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:24px;font-weight:700;cursor:pointer}
+.pad{display:grid;grid-template-columns:repeat(3,78px);justify-content:center;gap:16px 24px}.pad button{width:78px;height:78px;aspect-ratio:1/1;padding:0;border-radius:50%;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:26px;font-weight:700;cursor:pointer;display:grid;place-items:center;transition:transform .12s,background .12s;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}.pad button:active{transform:scale(.9);background:var(--org);color:#fff;border-color:var(--org)}.pad .ph{visibility:hidden}.pad svg{width:28px;height:28px}
+.dots i{transition:background .12s,transform .12s}.dots i.f{transform:scale(1.15)}.dots.err{animation:shake .35s}@keyframes shake{25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
+.x{position:sticky;top:0;float:right;width:40px;height:40px;margin:-4px -2px 0 8px;border-radius:50%;border:1px solid var(--bd);background:var(--inp);color:var(--tx);font-size:17px;cursor:pointer;z-index:3}.logoimg{display:block;width:84px;height:84px;margin:0 auto 14px;border-radius:22px;box-shadow:0 8px 28px rgba(0,0,0,.35)}
 .lnk{background:none;border:0;color:var(--ac);font-weight:700;padding:12px;cursor:pointer;width:100%}
 .pg{display:flex;justify-content:space-between;align-items:center;margin-top:10px}.pg button{padding:10px 16px;border-radius:12px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-weight:700;cursor:pointer}
 @media(prefers-reduced-motion:no-preference){.sh{animation:up .25s ease}@keyframes up{from{transform:translateY(30px);opacity:0}}}
+.spl{min-height:80vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}.spl .logoimg{width:104px;height:104px;margin-bottom:18px}.ld{width:150px;height:4px;border-radius:4px;background:var(--inp);overflow:hidden;margin:22px auto 10px}.ld i{display:block;width:40%;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--org),var(--ac))}
+@media(prefers-reduced-motion:no-preference){.spl .logoimg{animation:pls 1.8s ease-in-out infinite}.ld i{animation:ldm 1.1s ease-in-out infinite}@keyframes pls{50%{transform:scale(1.06)}}@keyframes ldm{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}}
 </style></head><body><div id="app"></div><div id="toast" hidden></div>
 <script>
 const API='https://script.google.com/macros/s/AKfycbw9W2FZ6SItwlhQH00iy-CFAZoINhhz6emE2ubYX3IeF4tOPnh98Gx7ZYWWDVmwmSk0/exec';  // <- tempel URL Web App Apps Script di sini
@@ -55,6 +59,8 @@ const JN={SAHAM_ID:'Saham IHSG',SAHAM_US:'Saham & ETF US',CRYPTO:'Crypto',SBN:'O
 const WR={SAHAM_ID:'#EFC287',SAHAM_US:'#E17807',CRYPTO:'#c084fc',SBN:'#38bdf8',RD_PU:'#34d399',RD_SAHAM:'#f472b6',RD_CAMPURAN:'#facc15',RD_PT:'#60a5fa',KAS:'#94a3b8'};
 const IC={dash:'<path d="M4 13h6V4H4zm0 7h6v-5H4zm10 0h6V11h-6zm0-16v5h6V4z"/>',port:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',hist:'<path d="M12 7v5l3 2M4 12a8 8 0 1 0 3-6.2M4 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',set:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3l2-1.5-2-3.5-2.4.8a7 7 0 0 0-1.6-1L14.5 4h-4l-.5 2.8a7 7 0 0 0-1.6 1L6 7 4 10.5 6 12a7 7 0 0 0 0 2l-2 1.5L6 19l2.4-.8a7 7 0 0 0 1.6 1l.5 2.8h4l.5-2.8a7 7 0 0 0 1.6-1l2.4.8 2-3.5-2-1.5a7 7 0 0 0 0-2z" fill="none" stroke="currentColor" stroke-width="1.6"/>'};
 const $=s=>document.querySelector(s),app=$('#app');
+const LOGOSVG=`<svg class="logoimg" viewBox="0 0 512 512"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0A426D"/><stop offset="1" stop-color="#03365C"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="url(#lg)"/><path d="M150 380V150h190M150 255h140" fill="none" stroke="#EFC287" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><circle cx="360" cy="360" r="28" fill="#E17807"/></svg>`;
+let first=true;
 let S={token:localStorage.fz_token||'',d:null,page:'dash',hp:1,fl:'ALL'},pin='';
 document.documentElement.dataset.t=localStorage.fz_t||'dark';
 
@@ -70,7 +76,7 @@ const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOStr
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function num(v){v=String(v).trim().replace(/\s/g,'');v=/^\d{1,3}(\.\d{3})+$/.test(v)?v.replace(/\./g,''):v.replace(',','.');return parseFloat(v);}
 function toast(m,ok=true){const t=$('#toast');t.textContent=(ok?'✓ ':'✕ ')+m;t.style.background=ok?'#0f9d6b':'#d83a3a';t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2800);}
-function sheet(h){closeSheet();const o=document.createElement('div');o.className='ov';o.id='ov';o.innerHTML='<div class="sh">'+h+'</div>';o.onclick=e=>{if(e.target===o)closeSheet();};document.body.appendChild(o);}
+function sheet(h){closeSheet();const o=document.createElement('div');o.className='ov';o.id='ov';o.innerHTML='<div class="sh"><button class="x" aria-label="Tutup" onclick="closeSheet()">✕</button>'+h+'</div>';o.onclick=e=>{if(e.target===o)closeSheet();};document.body.appendChild(o);}
 const closeSheet=()=>$('#ov')?.remove();
 function confirmBox(m,fn){window._cf=fn;sheet(`<h3>Konfirmasi</h3><p class="mut" style="margin-bottom:14px">${m}</p><button class="btn d" onclick="closeSheet();_cf()">Ya, hapus</button><button class="btn s" onclick="closeSheet()">Batal</button>`);}
 function toggleTheme(){const t=document.documentElement.dataset.t==='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.fz_t=t;}
@@ -114,28 +120,34 @@ function insights(c){
 }
 
 /* ---------- autentikasi ---------- */
+function splash(){app.innerHTML=`<div class="spl">${LOGOSVG}<div class="logo">FINANCUANZ</div><div class="ld"><i></i></div><p class="mut">Memuat aplikasi…</p></div>`;}
 async function boot(){
- if(S.token){try{await load();return shell();}catch(e){}}
- try{const s=await api('status');s.terdaftar?loginView():regView();}catch(e){app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><p class="mut">Tidak dapat terhubung ke server. Periksa URL Web App dan koneksi internet.</p><button class="btn" onclick="boot()">Coba lagi</button></div>`;}
+ splash();const w=first?new Promise(r=>setTimeout(r,1400)):Promise.resolve();first=false;
+ if(S.token){try{await load();await w;return shell();}catch(e){}}
+ try{const s=await api('status');await w;s.terdaftar?loginView():regView();}
+ catch(e){await w;app.innerHTML=`<div class="au" style="text-align:center">${LOGOSVG}<div class="logo">FINANCUANZ</div><p class="mut" style="margin:10px 0 16px">Tidak dapat terhubung ke server. Periksa URL Web App dan koneksi internet.</p><button class="btn" onclick="boot()">Coba lagi</button></div>`;}
 }
 const load=async()=>{S.d=await api('getAll');};
 function logout(q){if(!q&&S.token)api('logout').catch(()=>{});S.token='';delete localStorage.fz_token;closeSheet();boot();}
 function loginView(){pin='';
- app.innerHTML=`<div class="au" style="text-align:center"><div class="logo">FINANCUANZ</div><p class="mut">Masukkan PIN 6 digit</p><div class="dots" id="dots">${'<i></i>'.repeat(6)}</div>
- <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="key('${n}')">${n}</button>`).join('')}<button onclick="forgotView()" style="font-size:12px">Lupa PIN</button><button onclick="key('0')">0</button><button onclick="key('<')">⌫</button></div></div>`;
+ const bs='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M16 9.5l-5 5m0-5l5 5"/></svg>';
+ app.innerHTML=`<div class="au" style="text-align:center"><div class="logo">FINANCUANZ</div><p class="mut">Masukkan PIN 6 digit Anda</p><div class="dots" id="dots">${'<i></i>'.repeat(6)}</div>
+ <div class="pad">${[1,2,3,4,5,6,7,8,9].map(n=>`<button onclick="key('${n}')">${n}</button>`).join('')}<button class="ph" tabindex="-1" aria-hidden="true"></button><button onclick="key('0')">0</button><button onclick="key('<')" aria-label="Hapus">${bs}</button></div>
+ <button class="lnk" style="margin-top:22px" onclick="forgotView()">Lupa PIN?</button></div>`;
 }
+document.addEventListener('keydown',e=>{if(!$('#dots'))return;if(/^\d$/.test(e.key))key(e.key);else if(e.key==='Backspace')key('<');});
 async function key(k){
  pin=k==='<'?pin.slice(0,-1):pin.length<6?pin+k:pin;
  document.querySelectorAll('#dots i').forEach((e,i)=>e.className=i<pin.length?'f':'');
- if(pin.length===6){try{const r=await api('login',{pin});S.token=r.token;localStorage.fz_token=r.token;await load();shell();}catch(e){toast(e.message,false);pin='';key('<');}}
+ if(pin.length===6){try{const r=await api('login',{pin});S.token=r.token;localStorage.fz_token=r.token;await load();shell();}catch(e){toast(e.message,false);const D=$('#dots');D.classList.add('err');setTimeout(()=>D&&D.classList.remove('err'),400);pin='';key('<');}}
 }
 function regView(){
- app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><h3>Buat akun</h3>
+ app.innerHTML=`<div class="au" style="text-align:center">${LOGOSVG}<div class="logo">FINANCUANZ</div><p class="mut" style="margin-bottom:18px">Buat akun untuk mulai mencatat investasi</p><div style="text-align:left">
  <label>Nama<input id="r_n"></label><label>Email<input id="r_e" type="email"></label>
  <label>Foto profil (opsional)<input id="r_f" type="file" accept="image/*"></label>
  <label>PIN 6 digit<input id="r_p" type="password" inputmode="numeric" maxlength="6"></label>
  <label>Ulangi PIN<input id="r_p2" type="password" inputmode="numeric" maxlength="6"></label>
- <button class="btn" onclick="doReg()">Daftar</button></div>`;
+ <button class="btn" onclick="doReg()">Daftar</button></div></div>`;
 }
 async function doReg(){
  try{const p=$('#r_p').value;if(!/^\d{6}$/.test(p))throw new Error('PIN harus 6 digit angka.');if(p!==$('#r_p2').value)throw new Error('Ulangan PIN tidak sama.');
@@ -143,7 +155,7 @@ async function doReg(){
   S.token=r.token;localStorage.fz_token=r.token;await load();toast('Akun berhasil dibuat');shell();}catch(e){toast(e.message,false);}
 }
 function forgotView(){
- app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><h3>Reset PIN</h3><div id="fg"><label>Email terdaftar<input id="g_e" type="email"></label><button class="btn" onclick="sendCode()">Kirim kode</button></div><button class="lnk" onclick="boot()">Kembali</button></div>`;
+ app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><button class="x" aria-label="Tutup" onclick="boot()">✕</button><h3>Reset PIN</h3><div id="fg"><label>Email terdaftar<input id="g_e" type="email"></label><button class="btn" onclick="sendCode()">Kirim kode</button></div><button class="btn s" onclick="boot()">Batal</button></div>`;
 }
 async function sendCode(){
  try{await api('forgot',{email:$('#g_e').value.trim()});toast('Jika email cocok, kode telah dikirim');
@@ -198,7 +210,7 @@ function txForm(id){
  <div class="g2"><label>Currency<select id="f_c"><option>IDR</option><option ${t&&t.currency==='USD'?'selected':''}>USD</option></select></label>
  <label>Rekening dana<select id="f_r">${d.rekening.map(r=>`<option ${(t?t.rdn:localStorage.fz_r)===r?'selected':''}>${esc(r)}</option>`).join('')}</select></label></div>
  <label>Catatan (opsional)<input id="f_n" value="${t?esc(t.catatan):''}"></label><div class="mut" id="f_s" style="margin-bottom:6px"></div>
- <button class="btn" onclick="saveTx('${id||''}')">Simpan</button>`);
+ <button class="btn" onclick="saveTx('${id||''}')">Simpan</button><button class="btn s" onclick="closeSheet()">Batal</button>`);
  setTipe(TP);
 }
 function setTipe(x){TP=x;['BUY','SELL','DEPOSIT'].forEach(k=>{const b=$('#tp_'+k);b.className=k===x?'on '+(k==='SELL'?'sell':k==='DEPOSIT'?'dep':''):'';});
@@ -232,17 +244,17 @@ function asetForm(t){
  <label>Currency<select id="a_c"><option>IDR</option><option ${a.currency==='USD'?'selected':''}>USD</option></select></label>
  <label>Kode Google Finance (kosong = harga manual)<input id="a_g" placeholder="IDX:BBCA / NASDAQ:AAPL" value="${esc(a.gTicker)}"></label>
  <label>Harga manual / NAB<input id="a_h" inputmode="decimal" value="${a.hargaManual}"></label>
- <button class="btn" onclick="saveAset()">Simpan</button>${t?`<button class="btn d" onclick="delAset('${esc(t)}')">Hapus aset</button>`:''}`);
+ <button class="btn" onclick="saveAset()">Simpan</button><button class="btn s" onclick="closeSheet()">Batal</button>${t?`<button class="btn d" onclick="delAset('${esc(t)}')">Hapus aset</button>`:''}`);
 }
 async function saveAset(){try{await api('saveAset',{aset:{ticker:$('#a_t').value,nama:$('#a_n').value,jenis:$('#a_j').value,currency:$('#a_c').value,gTicker:$('#a_g').value,hargaManual:num($('#a_h').value)||''}});await load();closeSheet();go('set');toast('Aset disimpan');}catch(e){toast(e.message,false);}}
 async function delAset(t){try{await api('delAset',{ticker:t});await load();closeSheet();go('set');toast('Aset dihapus');}catch(e){toast(e.message,false);}}
-function rdnForm(){sheet(`<h3>Tambah rekening dana</h3><label>Nama (mis. Bibit, Ajaib, Stockbit)<input id="r_x"></label><button class="btn" onclick="saveRdn()">Simpan</button>`);}
+function rdnForm(){sheet(`<h3>Tambah rekening dana</h3><label>Nama (mis. Bibit, Ajaib, Stockbit)<input id="r_x"></label><button class="btn" onclick="saveRdn()">Simpan</button><button class="btn s" onclick="closeSheet()">Batal</button>`);}
 async function saveRdn(){try{await api('saveRdn',{nama:$('#r_x').value});await load();closeSheet();go('set');toast('Rekening ditambahkan');}catch(e){toast(e.message,false);}}
 async function delRdn(n){confirmBox('Hapus rekening "'+n+'"?',async()=>{try{await api('delRdn',{nama:n});await load();go('set');toast('Rekening dihapus');}catch(e){toast(e.message,false);}});}
 function profView(){
  const p=S.d.profil;sheet(`<h3>Profil</h3><label>Foto<input id="p_f" type="file" accept="image/*"></label><label>Nama<input id="p_n" value="${esc(p.nama)}"></label><p class="mut" style="margin-bottom:10px">${esc(p.email)}</p>
  <button class="btn" onclick="saveProf()">Simpan profil</button><h4 style="margin-top:20px">Ganti PIN</h4>
- <label>PIN lama<input id="p_l" type="password" inputmode="numeric" maxlength="6"></label><label>PIN baru<input id="p_b" type="password" inputmode="numeric" maxlength="6"></label><button class="btn s" onclick="savePin()">Ganti PIN</button>`);
+ <label>PIN lama<input id="p_l" type="password" inputmode="numeric" maxlength="6"></label><label>PIN baru<input id="p_b" type="password" inputmode="numeric" maxlength="6"></label><button class="btn s" onclick="savePin()">Ganti PIN</button><button class="btn s" onclick="closeSheet()">Batal</button>`);
 }
 async function saveProf(){try{const f=$('#p_f').files[0];await api('profil',{nama:$('#p_n').value.trim(),foto:f?await readImg(f):''});await load();closeSheet();go(S.page);toast('Profil disimpan');}catch(e){toast(e.message,false);}}
 async function savePin(){try{await api('ganti',{lama:$('#p_l').value,baru:$('#p_b').value});closeSheet();toast('PIN berhasil diganti');}catch(e){toast(e.message,false);}}
