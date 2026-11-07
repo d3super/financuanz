@@ -124,12 +124,26 @@ function insights(c){
 function splash(){app.innerHTML=`<div class="spl">${LOGOSVG}<div class="logo">FINANCUANZ</div><div class="ld"><i></i></div><p class="mut">Memuat aplikasi…</p></div>`;}
 async function boot(){
  splash();const w=first?new Promise(r=>setTimeout(r,1400)):Promise.resolve();first=false;
- if(S.token){try{await load();await w;return shell();}catch(e){}}
+ if(S.token&&Date.now()>Number(localStorage.fz_exp||0)){S.token='';delete localStorage.fz_token;delete localStorage.fz_exp;toast('Aplikasi terkunci karena tidak aktif 1 jam. Masukkan PIN untuk masuk lagi.',false);}
+ if(S.token){try{await load();await w;watch();return shell();}catch(e){}}
  try{const s=await api('status');await w;s.terdaftar?loginView():regView();}
  catch(e){await w;app.innerHTML=`<div class="au" style="text-align:center">${LOGOSVG}<div class="logo">FINANCUANZ</div><p class="mut" style="margin:10px 0 16px">Tidak dapat terhubung ke server. Periksa URL Web App dan koneksi internet.</p><button class="btn" onclick="boot()">Coba lagi</button></div>`;}
 }
 const load=async()=>{S.d=await api('getAll');};
-function logout(q){if(!q&&S.token)api('logout').catch(()=>{});S.token='';delete localStorage.fz_token;closeSheet();boot();}
+const SESI=3600e3; // kunci otomatis setelah 1 jam tanpa aktivitas
+let lastTouch=0,lastPing=0;
+function setSesi(t){S.token=t;localStorage.fz_token=t;localStorage.fz_exp=Date.now()+SESI;lastPing=Date.now();watch();}
+function activity(){ // setiap sentuhan/ketikan memperpanjang waktu 1 jam
+ if(!S.token)return;const n=Date.now();
+ if(n>Number(localStorage.fz_exp||0))return expire();
+ if(n-lastTouch<3000)return;lastTouch=n;localStorage.fz_exp=n+SESI;watch();
+ if(n-lastPing>12e4){lastPing=n;api('ping').catch(()=>{});} // sinkronkan server tiap ±2 menit aktif
+}
+['pointerdown','keydown','touchstart','scroll','input'].forEach(e=>document.addEventListener(e,activity,{passive:true,capture:true}));
+function watch(){clearTimeout(S.tm);S.tm=setTimeout(expire,Math.max(0,Number(localStorage.fz_exp||0)-Date.now()));}
+function expire(){if(S.token)logout(true);}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&Date.now()>Number(localStorage.fz_exp||0))expire();});
+function logout(q){if(q&&!S.token)return;if(!q&&S.token)api('logout').catch(()=>{});clearTimeout(S.tm);S.token='';delete localStorage.fz_token;delete localStorage.fz_exp;closeSheet();if(q)toast('Aplikasi terkunci karena tidak aktif 1 jam. Masukkan PIN untuk masuk lagi.',false);boot();}
 function loginView(){pin='';
  const bs='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M16 9.5l-5 5m0-5l5 5"/></svg>';
  app.innerHTML=`<div class="au" style="text-align:center"><div class="logo">FINANCUANZ</div><p class="mut">Masukkan PIN 6 digit Anda</p><div class="dots" id="dots">${'<i></i>'.repeat(6)}</div>
@@ -140,7 +154,7 @@ document.addEventListener('keydown',e=>{if(!$('#dots'))return;if(/^\d$/.test(e.k
 async function key(k){
  pin=k==='<'?pin.slice(0,-1):pin.length<6?pin+k:pin;
  document.querySelectorAll('#dots i').forEach((e,i)=>e.className=i<pin.length?'f':'');
- if(pin.length===6){try{const r=await api('login',{pin});S.token=r.token;localStorage.fz_token=r.token;await load();shell();}catch(e){toast(e.message,false);const D=$('#dots');D.classList.add('err');setTimeout(()=>D&&D.classList.remove('err'),400);pin='';key('<');}}
+ if(pin.length===6){try{const r=await api('login',{pin});setSesi(r.token);await load();shell();}catch(e){toast(e.message,false);const D=$('#dots');D.classList.add('err');setTimeout(()=>D&&D.classList.remove('err'),400);pin='';key('<');}}
 }
 function regView(){
  app.innerHTML=`<div class="au" style="text-align:center">${LOGOSVG}<div class="logo">FINANCUANZ</div><p class="mut" style="margin-bottom:18px">Buat akun untuk mulai mencatat investasi</p><div style="text-align:left">
@@ -153,7 +167,7 @@ function regView(){
 async function doReg(){
  try{const p=$('#r_p').value;if(!/^\d{6}$/.test(p))throw new Error('PIN harus 6 digit angka.');if(p!==$('#r_p2').value)throw new Error('Ulangan PIN tidak sama.');
   const f=$('#r_f').files[0],r=await api('register',{nama:$('#r_n').value.trim(),email:$('#r_e').value.trim(),pin:p,foto:f?await readImg(f):''});
-  S.token=r.token;localStorage.fz_token=r.token;await load();toast('Akun berhasil dibuat');shell();}catch(e){toast(e.message,false);}
+  setSesi(r.token);await load();toast('Akun berhasil dibuat');shell();}catch(e){toast(e.message,false);}
 }
 function forgotView(){
  app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><button class="x" aria-label="Tutup" onclick="boot()">✕</button><h3>Reset PIN</h3><div id="fg"><label>Email terdaftar<input id="g_e" type="email"></label><button class="btn" onclick="sendCode()">Kirim kode</button></div><button class="btn s" onclick="boot()">Batal</button></div>`;
