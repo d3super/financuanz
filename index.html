@@ -58,7 +58,7 @@ th{color:var(--mut);text-align:left;font-weight:600;padding:8px 6px}td{padding:1
 textarea{width:100%;margin-top:5px;border-radius:14px;border:1px solid var(--bd);background:var(--inp);color:var(--tx);padding:12px;font:inherit;font-size:13px}
 </style></head><body><div id="app"></div><div id="toast" hidden></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycbw9W2FZ6SItwlhQH00iy-CFAZoINhhz6emE2ubYX3IeF4tOPnh98Gx7ZYWWDVmwmSk0/exec';  // <- tempel URL Web App Apps Script di sini
+const API='https://script.google.com/macros/s/AKfycbw9W2FZ6SItwlhQH00iy-CFAZoINhhz6emE2ubYX3IeF4tOPnh98Gx7ZYWWDVmwmSk0/exec;  // <- tempel URL Web App Apps Script di sini
 const JN={SAHAM_ID:'Saham IHSG',SAHAM_US:'Saham & ETF US',CRYPTO:'Crypto',SBN:'Obligasi/SBN/ORI/Sukuk',RD_PU:'Reksadana Pasar Uang',RD_SAHAM:'Reksadana Saham',RD_CAMPURAN:'Reksadana Campuran',RD_PT:'Reksadana Pend. Tetap',KAS:'Kas'};
 const WR={SAHAM_ID:'#EFC287',SAHAM_US:'#E17807',CRYPTO:'#c084fc',SBN:'#38bdf8',RD_PU:'#34d399',RD_SAHAM:'#f472b6',RD_CAMPURAN:'#facc15',RD_PT:'#60a5fa',KAS:'#94a3b8'};
 const IC={dash:'<path d="M4 13h6V4H4zm0 7h6v-5H4zm10 0h6V11h-6zm0-16v5h6V4z"/>',port:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',hist:'<path d="M12 7v5l3 2M4 12a8 8 0 1 0 3-6.2M4 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',set:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3l2-1.5-2-3.5-2.4.8a7 7 0 0 0-1.6-1L14.5 4h-4l-.5 2.8a7 7 0 0 0-1.6 1L6 7 4 10.5 6 12a7 7 0 0 0 0 2l-2 1.5L6 19l2.4-.8a7 7 0 0 0 1.6 1l.5 2.8h4l.5-2.8a7 7 0 0 0 1.6-1l2.4.8 2-3.5-2-1.5a7 7 0 0 0 0-2z" fill="none" stroke="currentColor" stroke-width="1.6"/>'};
@@ -90,16 +90,16 @@ function readImg(f){return new Promise(r=>{const im=new Image();im.onload=()=>{c
 function calc(){
  const d=S.d,k=d.kurs,I=(v,c)=>c==='USD'?v*k:v,A={};d.aset.forEach(a=>A[a.ticker]=a);
  const tx=[...d.transaksi].sort((a,b)=>(a.tanggal+a.dibuat).localeCompare(b.tanggal+b.dibuat));
- const run=up=>{const H={},cash={},db={};let re=0,dd=0,bf=0,bp=0;
+ const run=up=>{const H={},cash={},db={},rt={},fb={};let re=0,dd=0,bf=0,bp=0;
   tx.forEach(t=>{if(up&&t.tanggal>up)return;const amt=t.qty*t.harga,c=t.currency,fe=+t.fee||0,pj=+t.pajak||0,add=(n,v)=>cash[n]=(cash[n]||0)+v;
    if(t.tipe==='DEPOSIT'){add(t.rdn,I(amt,c));return;}
    if(t.tipe==='WITHDRAW'){add(t.rdn,-I(amt,c));return;}
    if(t.tipe==='TRANSFER'){add(t.rdn,-I(amt,c));add(t.rdnTujuan,I(amt,c));return;}
    if(t.tipe==='DIVIDEN'){const v=I(amt,c);add(t.rdn,v);dd+=v;db[t.ticker]=(db[t.ticker]||0)+v;return;}
-   const h=H[t.ticker]||(H[t.ticker]={ticker:t.ticker,qty:0,cost:0,cur:c});bf+=I(fe,c);bp+=I(pj,c);
+   const h=H[t.ticker]||(H[t.ticker]={ticker:t.ticker,qty:0,cost:0,cur:c});bf+=I(fe,c);bp+=I(pj,c);fb[t.ticker]=(fb[t.ticker]||0)+I(fe+pj,c);
    if(t.tipe==='BUY'){h.qty+=t.qty;h.cost+=amt+fe+pj;add(t.rdn,-I(amt+fe+pj,c));}
-   else{const av=h.qty?h.cost/h.qty:t.harga,sq=Math.min(t.qty,h.qty),f=t.qty?sq/t.qty:0;h.cost-=av*sq;h.qty-=sq;re+=I(t.harga*sq-(fe+pj)*f-av*sq,c);add(t.rdn,I(amt-fe-pj,c));}
-  });return{H,cash,re,dd,db,bf,bp};};
+   else{const av=h.qty?h.cost/h.qty:t.harga,sq=Math.min(t.qty,h.qty),f=t.qty?sq/t.qty:0;h.cost-=av*sq;h.qty-=sq;const g=I(t.harga*sq-(fe+pj)*f-av*sq,c);re+=g;rt[t.ticker]=(rt[t.ticker]||0)+g;add(t.rdn,I(amt-fe-pj,c));}
+  });return{H,cash,re,dd,db,bf,bp,rt,fb};};
  const r=run(),hold=Object.values(r.H).filter(h=>h.qty>1e-9).map(h=>{
   const a=A[h.ticker]||{},av=h.cost/h.qty,pr=a.harga!==''&&a.harga!=null?a.harga:av,cur=a.currency||h.cur,nilai=I(h.qty*pr,cur),modal=I(h.cost,cur);
   return{...h,jenis:a.jenis||'SAHAM_ID',nama:a.nama||h.ticker,avg:av,pr,cur,nilai,modal,pl:nilai-modal,div:r.db[h.ticker]||0,pct:modal?(nilai-modal)/modal*100:0};
@@ -110,7 +110,7 @@ function calc(){
   while(y<n.getFullYear()||(y===n.getFullYear()&&m<=n.getMonth()+1)){const key=y+'-'+String(m).padStart(2,'0'),q=run(key+'-31');
    ms.push({l:key,v:Object.values(q.H).reduce((s,h)=>s+I(h.cost,(A[h.ticker]||{}).currency||h.cur),0)});if(++m>12){m=1;y++;}}}
  if(ms.length)ms[ms.length-1].now=nilai;
- return{hold,kas,nilai,modal,fl:nilai-modal,re:r.re,div:r.dd,bf:r.bf,bp:r.bp,al,ms,cash:r.cash,tot:nilai+kas};
+ return{hold,kas,nilai,modal,fl:nilai-modal,re:r.re,div:r.dd,bf:r.bf,bp:r.bp,rt:r.rt,fb:r.fb,db:r.db,al,ms,cash:r.cash,tot:nilai+kas};
 }
 function insights(c){
  const o=[],T=c.tot;if(!c.hold.length)return[['Mulai dari sini','Catat DEPOSIT ke rekening dana, lalu rekam BUY pertama Anda.']];
@@ -277,6 +277,29 @@ async function saveTarget(clear){
  try{const t=clear?{}:tgVal(),sm=Object.values(t).reduce((a,b)=>a+b,0);if(!clear&&Math.abs(sm-100)>.01)throw new Error('Total target harus 100% (sekarang '+nf.format(sm)+'%).');
   await api('saveTarget',{target:t});await load();closeSheet();go(S.page);toast(clear?'Target dihapus':'Target alokasi disimpan');}catch(e){toast(e.message,false);}
 }
+function priceSvg(P,pr){
+ const W=300,H=110,ts=P.map(p=>Date.parse(p.t)),t0=Math.min(...ts),t1=Math.max(...ts),vals=P.map(p=>p.p).concat(P.map(p=>p.avg).filter(v=>v!=null),pr!=null?[pr]:[]),hi=Math.max(...vals),lo=Math.min(...vals),rg=(hi-lo)||1;
+ const X=i=>t1>t0?(ts[i]-t0)/(t1-t0)*(W-16)+8:W/2,Y=v=>H-10-(v-lo)/rg*(H-26),av=P.map((p,i)=>p.avg!=null?X(i).toFixed(1)+','+Y(p.avg).toFixed(1):null).filter(Boolean);
+ return`<svg viewBox="0 0 ${W} ${H+16}" width="100%" role="img" aria-label="Harga transaksi dan harga rata-rata">${pr!=null?`<line x1="0" x2="${W}" y1="${Y(pr)}" y2="${Y(pr)}" stroke="#E17807" stroke-dasharray="4 3"/>`:''}${av.length>1?`<polyline points="${av.join(' ')}" fill="none" stroke="#EFC287" stroke-width="2"/>`:''}${P.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.p).toFixed(1)}" r="4.5" fill="${p.tp==='BUY'?'#34d399':'#ff6b6b'}"/>`).join('')}<text x="0" y="${H+13}" font-size="9" fill="#9db2c4">${P[0].t}</text><text x="${W}" y="${H+13}" font-size="9" fill="#9db2c4" text-anchor="end">${P[P.length-1].t}</text></svg>
+ <div class="mut" style="font-size:11px;line-height:1.6"><span class="up">●</span> beli · <span class="dn">●</span> jual · <span style="color:#EFC287">━</span> harga rata-rata · <span style="color:#E17807">╍</span> harga kini</div>`;
+}
+function assetView(tk){
+ const d=S.d,c=calc(),A=d.aset.find(x=>x.ticker===tk)||{},h=c.hold.find(x=>x.ticker===tk),all=d.transaksi.filter(t=>t.ticker===tk&&['BUY','SELL','DIVIDEN'].includes(t.tipe));
+ let q=0,cost=0;const P=[];
+ [...all].sort((a,b)=>(a.tanggal+a.dibuat).localeCompare(b.tanggal+b.dibuat)).forEach(t=>{
+  if(t.tipe==='BUY'){q+=t.qty;cost+=t.qty*t.harga+(t.fee||0)+(t.pajak||0);}
+  else if(t.tipe==='SELL'){const av=q?cost/q:0,sq=Math.min(t.qty,q);cost-=av*sq;q-=sq;}
+  if(t.tipe!=='DIVIDEN')P.push({t:t.tanggal,p:t.harga,tp:t.tipe,avg:q>1e-9?cost/q:null});});
+ const cur=A.currency||(all[0]&&all[0].currency)||'IDR',pr=A.harga!==''&&A.harga!=null?A.harga:null,T=Object.values(c.al).reduce((a,b)=>a+b,0)||1;
+ const rl=c.rt[tk]||0,dv=c.db[tk]||0,tr=(h?h.pl:0)+rl+dv,row=(l,v,k='')=>`<div class="lg"><span class="mut">${l}</span><b class="${k}">${v}</b></div>`;
+ sheet(`<h3>${esc(tk)}</h3><p class="mut" style="margin:-8px 0 12px">${esc(A.nama||tk)}${A.jenis?' · '+JN[A.jenis]:''}</p>
+ <div class="row" style="margin-bottom:8px"><div><div class="mut">Harga kini</div><div class="big" style="font-size:26px">${pr!=null?mn(pr,cur):'-'}</div></div>${h?`<span class="chip ${cl(h.pl)}">${h.pl>=0?'▲':'▼'} ${pc(h.pct)}</span>`:'<span class="chip">Tidak dimiliki</span>'}</div>
+ ${P.length?priceSvg(P,pr):''}
+ <div class="card" style="margin-top:10px">${row('Jumlah (unit/lembar)',h?nf.format(h.qty):'0')}${h?row('Harga rata-rata',mn(h.avg,h.cur))+row('Modal',rp(h.modal))+row('Nilai saat ini',rp(h.nilai))+row('Porsi portofolio',nf.format(h.nilai/T*100)+'%')+row('Profit/loss berjalan',rp(h.pl),cl(h.pl)):''}${row('Profit/loss terealisasi',rp(rl),cl(rl))}${row('Dividen diterima',rp(dv),dv?'up':'')}${row('Biaya &amp; pajak',rp(c.fb[tk]||0))}${row('Total return',rp(tr),cl(tr))}</div>
+ <div class="g2"><button class="btn" data-t="${esc(tk)}" onclick="txForm(null,{tipe:'BUY',ticker:this.dataset.t})">Beli</button><button class="btn s" data-t="${esc(tk)}" ${h?'':'disabled'} onclick="txForm(null,{tipe:'SELL',ticker:this.dataset.t})">Jual</button></div>
+ <h4 style="margin-top:16px">Riwayat transaksi <span class="mut" style="font-weight:400">(ketuk untuk mengubah)</span></h4>${[...all].sort((a,b)=>(b.tanggal+b.dibuat).localeCompare(a.tanggal+a.dibuat)).map(t=>`<div class="lg" style="cursor:pointer" onclick="txForm('${t.id}')"><span>${t.tanggal} <span class="bdg ${t.tipe}">${t.tipe}</span></span><span>${t.tipe==='DIVIDEN'?mn(t.harga,t.currency):nf.format(t.qty)+' × '+mn(t.harga,t.currency)}</span></div>`).join('')||'<p class="mut">Belum ada transaksi.</p>'}
+ <button class="btn s" onclick="closeSheet()">Tutup</button>`);
+}
 function dash(){
  const c=calc(),W=300,Hh=110,m=c.ms,mx=Math.max(1,...m.map(x=>Math.max(x.v,x.now||0))),
  X=i=>m.length>1?i*(W/(m.length-1)):W/2,Y=v=>Hh-6-(v/mx)*(Hh-18),
@@ -294,20 +317,39 @@ function dash(){
 }
 function port(){
  const c=calc();return`<h3>Portofolio</h3><div class="card row"><div><div class="mut">Total P/L berjalan</div><b class="${cl(c.fl)}">${rp(c.fl)}</b></div><span class="chip ${cl(c.fl)}">${pc(c.modal?c.fl/c.modal*100:0)}</span></div>`+
- (c.hold.map(h=>`<div class="card"><div class="row"><div><b>${esc(h.ticker)}</b><div class="mut">${JN[h.jenis]}</div></div><div style="text-align:right"><b class="${cl(h.pl)}">${rp(h.pl)}</b><div class="${cl(h.pl)}" style="font-size:13px">${pc(h.pct)}</div></div></div>
- <div class="g2 mut" style="margin-top:10px"><span>Qty: ${nf.format(h.qty)}</span><span>Nilai: ${rp(h.nilai)}</span><span>Rata-rata: ${mn(h.avg,h.cur)}</span><span>Harga kini: ${mn(h.pr,h.cur)}</span>${h.div?`<span class="up">Dividen: ${rp(h.div)}</span>`:''}</div></div>`).join('')||'<div class="card mut">Belum ada aset. Tekan tombol + untuk merekam transaksi pertama.</div>');
+ (c.hold.map(h=>`<div class="card" style="cursor:pointer" data-t="${esc(h.ticker)}" onclick="assetView(this.dataset.t)"><div class="row"><div><b>${esc(h.ticker)}</b><div class="mut">${JN[h.jenis]}</div></div><div style="text-align:right"><b class="${cl(h.pl)}">${rp(h.pl)}</b><div class="${cl(h.pl)}" style="font-size:13px">${pc(h.pct)}</div></div></div>
+ <div class="g2 mut" style="margin-top:10px"><span>Qty: ${nf.format(h.qty)}</span><span>Nilai: ${rp(h.nilai)}</span><span>Rata-rata: ${mn(h.avg,h.cur)}</span><span>Harga kini: ${mn(h.pr,h.cur)}</span>${h.div?`<span class="up">Dividen: ${rp(h.div)}</span>`:''}</div><div class="mut" style="text-align:right;font-size:12px;margin-top:8px">Lihat detail ›</div></div>`).join('')||'<div class="card mut">Belum ada aset. Tekan tombol + untuk merekam transaksi pertama.</div>');
 }
-function hist(){
- const L=S.d.transaksi.filter(t=>S.fl==='ALL'||t.tipe===S.fl).sort((a,b)=>(b.tanggal+b.dibuat).localeCompare(a.tanggal+a.dibuat)),n=Math.max(1,Math.ceil(L.length/10));S.hp=Math.min(S.hp,n);
- return`<h3>Histori transaksi</h3><div class="fl">${['ALL','BUY','SELL','DEPOSIT','DIVIDEN','WITHDRAW','TRANSFER'].map(f=>`<button class="${S.fl===f?'on':''}" onclick="S.fl='${f}';S.hp=1;go('hist')">${f==='ALL'?'Semua':f}</button>`).join('')}</div>
- <div class="card tw"><table><tr><th>Tanggal</th><th>Jenis</th><th>Simbol</th><th>Tipe</th><th>Qty</th><th>Harga</th><th>Biaya</th><th>Catatan</th><th></th></tr>${L.slice((S.hp-1)*10,S.hp*10).map(t=>`<tr><td>${t.tanggal}</td><td>${JN[t.jenis]||'-'}</td><td><b>${t.tipe==='TRANSFER'?esc(t.rdn)+' → '+esc(t.rdnTujuan):esc(t.ticker)}</b></td><td><span class="bdg ${t.tipe}">${t.tipe}</span></td><td>${t.tipe==='BUY'||t.tipe==='SELL'?nf.format(t.qty):'-'}</td><td>${mn(t.harga,t.currency)}</td><td>${t.fee+t.pajak?mn(t.fee+t.pajak,t.currency):'-'}</td><td>${esc(t.catatan)}</td><td><button class="ib" style="width:34px;height:34px;font-size:14px" onclick="txForm('${t.id}')">✎</button> <button class="ib" style="width:34px;height:34px;font-size:14px" onclick="delTx('${t.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan="9" class="mut">Belum ada transaksi.</td></tr>'}</table></div>
+S.q='';S.fj='';S.fr='';S.df='';S.dt='';S.fo=false;
+function histFilter(){
+ const q=S.q.trim().toLowerCase(),A={};S.d.aset.forEach(a=>A[a.ticker]=a);
+ return S.d.transaksi.filter(t=>(S.fl==='ALL'||t.tipe===S.fl)&&(!S.fj||t.jenis===S.fj)&&(!S.fr||t.rdn===S.fr||t.rdnTujuan===S.fr)&&(!S.df||t.tanggal>=S.df)&&(!S.dt||t.tanggal<=S.dt)
+  &&(!q||[t.ticker,(A[t.ticker]||{}).nama,t.catatan,t.rdn,t.rdnTujuan,JN[t.jenis],t.tipe].join(' ').toLowerCase().includes(q))).sort((a,b)=>(b.tanggal+b.dibuat).localeCompare(a.tanggal+a.dibuat));
+}
+function histBody(){
+ const L=histFilter(),n=Math.max(1,Math.ceil(L.length/10)),k=S.d.kurs,I=(v,c)=>c==='USD'?v*k:v;S.hp=Math.min(S.hp,n);
+ const sm=t=>L.filter(x=>x.tipe===t).reduce((a,x)=>a+I(x.qty*x.harga,x.currency),0),by=L.reduce((a,x)=>a+I((x.fee||0)+(x.pajak||0),x.currency),0);
+ return`<div class="mut" style="margin-bottom:8px">${L.length} transaksi${sm('BUY')?' · Beli '+rp(sm('BUY')):''}${sm('SELL')?' · Jual '+rp(sm('SELL')):''}${sm('DIVIDEN')?' · Dividen '+rp(sm('DIVIDEN')):''}${by?' · Biaya '+rp(by):''}</div>
+ <div class="card tw"><table><tr><th>Tanggal</th><th>Jenis</th><th>Simbol</th><th>Tipe</th><th>Qty</th><th>Harga</th><th>Biaya</th><th>Catatan</th><th></th></tr>${L.slice((S.hp-1)*10,S.hp*10).map(t=>`<tr><td>${t.tanggal}</td><td>${JN[t.jenis]||'-'}</td><td><b ${['BUY','SELL','DIVIDEN'].includes(t.tipe)?`data-t="${esc(t.ticker)}" onclick="assetView(this.dataset.t)" style="cursor:pointer;text-decoration:underline dotted"`:''}>${t.tipe==='TRANSFER'?esc(t.rdn)+' → '+esc(t.rdnTujuan):esc(t.ticker)}</b></td><td><span class="bdg ${t.tipe}">${t.tipe}</span></td><td>${t.tipe==='BUY'||t.tipe==='SELL'?nf.format(t.qty):'-'}</td><td>${mn(t.harga,t.currency)}</td><td>${t.fee+t.pajak?mn(t.fee+t.pajak,t.currency):'-'}</td><td>${esc(t.catatan)}</td><td><button class="ib" style="width:34px;height:34px;font-size:14px" onclick="txForm('${t.id}')">✎</button> <button class="ib" style="width:34px;height:34px;font-size:14px" onclick="delTx('${t.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan="9" class="mut">Tidak ada transaksi yang cocok.</td></tr>'}</table></div>
  <div class="pg"><button onclick="S.hp--;go('hist')" ${S.hp<=1?'disabled':''}>‹ Sebelumnya</button><span class="mut">${S.hp} / ${n}</span><button onclick="S.hp++;go('hist')" ${S.hp>=n?'disabled':''}>Berikutnya ›</button></div>`;
+}
+const hb=()=>{const e=$('#hb');if(e)e.innerHTML=histBody();};
+function hist(){
+ const nF=[S.fj,S.fr,S.df,S.dt].filter(Boolean).length;
+ return`<h3>Histori transaksi</h3>
+ <div class="row" style="gap:8px;margin-bottom:10px"><input id="h_q" type="search" placeholder="Cari simbol, catatan, rekening…" value="${esc(S.q)}" oninput="S.q=this.value;S.hp=1;hb()" style="margin:0"><button class="chip" style="height:50px;padding:0 16px;font-size:14px;border:1px solid ${nF?'var(--org)':'var(--bd)'};cursor:pointer;color:var(--tx)" onclick="S.fo=!S.fo;go('hist')">Filter${nF?' ('+nF+')':''}</button></div>
+ ${S.fo?`<div class="card"><div class="g2"><label>Dari tanggal<input type="date" value="${S.df}" onchange="S.df=this.value;S.hp=1;hb()"></label><label>Sampai tanggal<input type="date" value="${S.dt}" onchange="S.dt=this.value;S.hp=1;hb()"></label></div>
+ <div class="g2"><label>Jenis aset<select onchange="S.fj=this.value;S.hp=1;hb()"><option value="">Semua</option>${Object.keys(JN).map(k=>`<option value="${k}" ${S.fj===k?'selected':''}>${JN[k]}</option>`).join('')}</select></label>
+ <label>Rekening dana<select onchange="S.fr=this.value;S.hp=1;hb()"><option value="">Semua</option>${S.d.rekening.map(x=>`<option ${S.fr===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label></div>
+ <button class="btn s" style="height:44px;margin-top:0" onclick="S.fj=S.fr=S.df=S.dt='';S.q='';S.hp=1;go('hist')">Reset pencarian &amp; filter</button></div>`:''}
+ <div class="fl">${['ALL','BUY','SELL','DEPOSIT','DIVIDEN','WITHDRAW','TRANSFER'].map(f=>`<button class="${S.fl===f?'on':''}" onclick="S.fl='${f}';S.hp=1;go('hist')">${f==='ALL'?'Semua':f}</button>`).join('')}</div>
+ <div id="hb">${histBody()}</div>`;
 }
 function delTx(id){confirmBox('Hapus transaksi ini? Tindakan tidak bisa dibatalkan.',async()=>{try{await api('delTx',{id});await load();go('hist');toast('Transaksi dihapus');}catch(e){toast(e.message,false);}});}
 
 /* ---------- form transaksi ---------- */
 let TP='BUY';
-function txForm(id){
+function txForm(id,pre){
  const t=id?S.d.transaksi.find(x=>x.id===id):null,d=S.d;TP=t?t.tipe:'BUY';
  sheet(`<h3>${t?'Ubah':'Rekam'} transaksi</h3><div class="seg">${['BUY','SELL','DEPOSIT','DIVIDEN','WITHDRAW','TRANSFER'].map(x=>`<button id="tp_${x}" onclick="setTipe('${x}')">${x}</button>`).join('')}</div>
  <label>Tanggal<input id="f_tg" type="date" value="${t?t.tanggal:today()}"></label>
@@ -321,7 +363,7 @@ function txForm(id){
  <label id="f_r2w">Rekening tujuan<select id="f_r2">${d.rekening.map((r,i)=>`<option ${(t?t.rdnTujuan===r:i===1)?'selected':''}>${esc(r)}</option>`).join('')}</select></label>
  <label>Catatan (opsional)<input id="f_n" value="${t?esc(t.catatan):''}"></label><div class="mut" id="f_s" style="margin-bottom:6px"></div>
  <button class="btn" onclick="saveTx('${id||''}')">Simpan</button><button class="btn s" onclick="closeSheet()">Batal</button>`);
- setTipe(TP);
+ setTipe(TP);if(pre){setTipe(pre.tipe);$('#f_t').value=pre.ticker;fillA();}
 }
 const KAS_T=['DEPOSIT','WITHDRAW','TRANSFER'],FEE=()=>{try{return JSON.parse(localStorage.fz_fee)||{}}catch(e){return{}}};
 function setTipe(x){TP=x;['BUY','SELL','DEPOSIT','DIVIDEN','WITHDRAW','TRANSFER'].forEach(k=>{const b=$('#tp_'+k);b.className=k===x?'on '+({SELL:'sell',DEPOSIT:'dep',DIVIDEN:'div',WITHDRAW:'wd',TRANSFER:'tf'}[k]||''):'';});
