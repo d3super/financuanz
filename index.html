@@ -130,13 +130,29 @@ function insights(c){
 /* ---------- autentikasi ---------- */
 function splash(){app.innerHTML=`<div class="spl">${LOGOSVG}<div class="logo">FINANCUANZ</div><div class="ld"><i></i></div><p class="mut">Memuat aplikasi…</p></div>`;}
 async function boot(){
- splash();const w=first?new Promise(r=>setTimeout(r,1400)):Promise.resolve();first=false;
- if(S.token&&Date.now()>Number(localStorage.fz_exp||0)){S.token='';delete localStorage.fz_token;delete localStorage.fz_exp;toast('Aplikasi terkunci karena tidak aktif 1 jam. Masukkan PIN untuk masuk lagi.',false);}
- if(S.token){try{await load();await w;watch();return shell();}catch(e){}}
+ splash();const w=first?new Promise(r=>setTimeout(r,localStorage.fz_cache?700:1400)):Promise.resolve();first=false;
+ if(S.token&&Date.now()>Number(localStorage.fz_exp||0)){S.token='';S.key=null;sessionStorage.removeItem('fz_k');delete localStorage.fz_token;delete localStorage.fz_exp;toast('Aplikasi terkunci karena tidak aktif 1 jam. Masukkan PIN untuk masuk lagi.',false);}
+ if(S.token){try{
+  const c=await cacheLoad();
+  if(c){S.d=c;S.stale='loading';await w;watch();shell();bg();return;}
+  await load();await w;watch();return shell();
+ }catch(e){}}
  try{const s=await api('status');await w;s.terdaftar?loginView():regView();}
  catch(e){await w;app.innerHTML=`<div class="au" style="text-align:center">${LOGOSVG}<div class="logo">FINANCUANZ</div><p class="mut" style="margin:10px 0 16px">Tidak dapat terhubung ke server. Periksa URL Web App dan koneksi internet.</p><button class="btn" onclick="boot()">Coba lagi</button></div>`;}
 }
-const load=async()=>{S.d=await api('getAll');};
+const load=async()=>{S.d=await api('getAll');cacheSave();};
+/* ---------- Cache terenkripsi di HP (kunci dari PIN) ---------- */
+const B64=b=>{b=new Uint8Array(b);let t='';for(let i=0;i<b.length;i+=8192)t+=String.fromCharCode.apply(null,b.subarray(i,i+8192));return btoa(t);},U8=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function setKey(pw){try{let sl=localStorage.fz_salt;if(!sl){sl=B64(crypto.getRandomValues(new Uint8Array(16)));localStorage.fz_salt=sl;}
+ const m=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveKey']);
+ S.key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:U8(sl),iterations:100000,hash:'SHA-256'},m,{name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+ sessionStorage.fz_k=B64(await crypto.subtle.exportKey('raw',S.key));}catch(e){S.key=null;}}
+async function getKey(){if(S.key)return S.key;try{const k=sessionStorage.fz_k;if(!k)return null;S.key=await crypto.subtle.importKey('raw',U8(k),'AES-GCM',true,['encrypt','decrypt']);return S.key;}catch(e){return null;}}
+async function cacheSave(){try{const k=await getKey();if(!k||!S.d)return;const iv=crypto.getRandomValues(new Uint8Array(12)),ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},k,new TextEncoder().encode(JSON.stringify(S.d))),o=new Uint8Array(12+ct.byteLength);o.set(iv);o.set(new Uint8Array(ct),12);localStorage.fz_cache=B64(o);}catch(e){}}
+async function cacheLoad(){try{const k=await getKey(),c=localStorage.fz_cache;if(!k||!c)return null;const b=U8(c);return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:b.slice(0,12)},k,b.slice(12))));}catch(e){return null;}}
+const redraw=()=>{const v=$('#v');if(v)v.innerHTML=({dash,port,hist,set}[S.page])();};
+function bg(){load().then(()=>{S.stale='';redraw();}).catch(()=>{if(S.token){S.stale='offline';redraw();}});}
+
 const SESI=3600e3; // kunci otomatis setelah 1 jam tanpa aktivitas
 let lastTouch=0,lastPing=0;
 function setSesi(t){S.token=t;localStorage.fz_token=t;localStorage.fz_exp=Date.now()+SESI;lastPing=Date.now();watch();}
@@ -150,7 +166,7 @@ function activity(){ // setiap sentuhan/ketikan memperpanjang waktu 1 jam
 function watch(){clearTimeout(S.tm);S.tm=setTimeout(expire,Math.max(0,Number(localStorage.fz_exp||0)-Date.now()));}
 function expire(){if(S.token)logout(true);}
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&S.token&&Date.now()>Number(localStorage.fz_exp||0))expire();});
-function logout(q){if(q&&!S.token)return;if(!q&&S.token)api('logout').catch(()=>{});clearTimeout(S.tm);S.token='';delete localStorage.fz_token;delete localStorage.fz_exp;closeSheet();if(q)toast('Aplikasi terkunci karena tidak aktif 1 jam. Masukkan PIN untuk masuk lagi.',false);boot();}
+function logout(q){if(q&&!S.token)return;if(!q&&S.token)api('logout').catch(()=>{});clearTimeout(S.tm);S.key=null;sessionStorage.removeItem('fz_k');if(!q)localStorage.removeItem('fz_cache');S.token='';delete localStorage.fz_token;delete localStorage.fz_exp;closeSheet();if(q)toast('Aplikasi terkunci karena tidak aktif 1 jam. Masukkan PIN untuk masuk lagi.',false);boot();}
 function loginView(){pin='';
  const bs='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9l-6 7 6 7h12z"/><path d="M16 9.5l-5 5m0-5l5 5"/></svg>';
  app.innerHTML=`<div class="au" style="text-align:center"><div class="logo">FINANCUANZ</div><p class="mut">Masukkan PIN 6 digit Anda</p><div class="dots" id="dots">${'<i></i>'.repeat(6)}</div>
@@ -161,7 +177,7 @@ document.addEventListener('keydown',e=>{if(!$('#dots'))return;if(/^\d$/.test(e.k
 async function key(k){
  pin=k==='<'?pin.slice(0,-1):pin.length<6?pin+k:pin;
  document.querySelectorAll('#dots i').forEach((e,i)=>e.className=i<pin.length?'f':'');
- if(pin.length===6){try{const r=await api('login',{pin});setSesi(r.token);await load();shell();}catch(e){toast(e.message,false);const D=$('#dots');D.classList.add('err');setTimeout(()=>D&&D.classList.remove('err'),400);pin='';key('<');}}
+ if(pin.length===6){try{const r=await api('login',{pin}),pw=pin;setSesi(r.token);await setKey(pw);const c=await cacheLoad();if(c){S.d=c;S.stale='loading';shell();bg();}else{await load();shell();}}catch(e){toast(e.message,false);const D=$('#dots');D.classList.add('err');setTimeout(()=>D&&D.classList.remove('err'),400);pin='';key('<');}}
 }
 function regView(){
  app.innerHTML=`<div class="au" style="text-align:center">${LOGOSVG}<div class="logo">FINANCUANZ</div><p class="mut" style="margin-bottom:18px">Buat akun untuk mulai mencatat investasi</p><div style="text-align:left">
@@ -174,7 +190,7 @@ function regView(){
 async function doReg(){
  try{const p=$('#r_p').value;if(!/^\d{6}$/.test(p))throw new Error('PIN harus 6 digit angka.');if(p!==$('#r_p2').value)throw new Error('Ulangan PIN tidak sama.');
   const f=$('#r_f').files[0],r=await api('register',{nama:$('#r_n').value.trim(),email:$('#r_e').value.trim(),pin:p,foto:f?await readImg(f):''});
-  setSesi(r.token);await load();toast('Akun berhasil dibuat');shell();}catch(e){toast(e.message,false);}
+  setSesi(r.token);await setKey(p);await load();toast('Akun berhasil dibuat');shell();}catch(e){toast(e.message,false);}
 }
 function forgotView(){
  app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><button class="x" aria-label="Tutup" onclick="boot()">✕</button><h3>Reset PIN</h3><div id="fg"><label>Email terdaftar<input id="g_e" type="email"></label><button class="btn" onclick="sendCode()">Kirim kode</button></div><button class="btn s" onclick="boot()">Batal</button></div>`;
@@ -183,7 +199,7 @@ async function sendCode(){
  try{await api('forgot',{email:$('#g_e').value.trim()});toast('Jika email cocok, kode telah dikirim');
   $('#fg').innerHTML=`<label>Kode dari email<input id="g_c" inputmode="numeric" maxlength="6"></label><label>PIN baru<input id="g_p" type="password" inputmode="numeric" maxlength="6"></label><button class="btn" onclick="doReset()">Simpan PIN baru</button>`;}catch(e){toast(e.message,false);}
 }
-async function doReset(){try{await api('reset',{code:$('#g_c').value,pin:$('#g_p').value});toast('PIN berhasil diganti');boot();}catch(e){toast(e.message,false);}}
+async function doReset(){try{await api('reset',{code:$('#g_c').value,pin:$('#g_p').value});localStorage.removeItem('fz_cache');toast('PIN berhasil diganti');boot();}catch(e){toast(e.message,false);}}
 
 /* ---------- kerangka & halaman ---------- */
 function shell(){
@@ -193,7 +209,7 @@ function shell(){
 }
 function go(p){S.page=p;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id==='n_'+p));$('#v').innerHTML={dash,port,hist,set}[p]();window.scrollTo(0,0);}
 const refresh=async()=>{try{await load();go(S.page);}catch(e){toast(e.message,false);}};
-function head(){const p=S.d.profil;return`<div class="row" style="margin-bottom:16px"><div class="row"><div class="ava" onclick="profView()" style="${p.foto?`background-image:url(${p.foto})`:''}">${p.foto?'':esc(p.nama[0])}</div><div><div class="mut">Halo,</div><b>${esc(p.nama)}</b></div></div><div class="row"><button class="ib" onclick="refresh()" aria-label="Muat ulang">↻</button><button class="ib" onclick="toggleTheme()" aria-label="Ganti tema">◐</button></div></div>`;}
+function head(){const p=S.d.profil;return`<div class="row" style="margin-bottom:16px"><div class="row"><div class="ava" onclick="profView()" style="${p.foto?`background-image:url(${p.foto})`:''}">${p.foto?'':esc(p.nama[0])}</div><div><div class="mut">Halo,</div><b>${esc(p.nama)}</b></div></div><div class="row"><button class="ib" onclick="refresh()" aria-label="Muat ulang">↻</button><button class="ib" onclick="toggleTheme()" aria-label="Ganti tema">◐</button></div></div>${S.stale?`<div class="mut" style="margin:-8px 0 10px">${S.stale==='offline'?'Offline · menampilkan data tersimpan':'Memperbarui data…'}</div>`:''}`;}
 const PAL=['#EFC287','#E17807','#38bdf8','#34d399','#c084fc','#f472b6','#facc15'];
 S.pm='jenis';S.ps=-1;
 function pieData(c){
@@ -341,6 +357,7 @@ function set(){
  <div class="card"><h4>Target alokasi</h4><p class="mut" style="margin-bottom:8px">Tentukan porsi ideal tiap jenis aset untuk saran rebalancing di Dashboard.</p><button class="btn s" onclick="targetForm()">Atur target alokasi</button></div>
  <div class="card"><h4>Biaya default Saham IHSG</h4><p class="mut" style="margin-bottom:8px">Terisi otomatis di form BUY/SELL dan masih bisa diubah. Isi 0 jika tidak ada. Tersimpan di perangkat ini.</p><div class="g2"><label>Fee beli (%)<input id="s_fb" inputmode="decimal" value="${FEE().b??''}"></label><label>Fee jual (%)<input id="s_fs" inputmode="decimal" value="${FEE().s??''}"></label></div><label>Pajak jual (%)<input id="s_ft" inputmode="decimal" value="${FEE().t??''}"></label><button class="btn s" onclick="saveFee()">Simpan biaya default</button></div>
  <div class="card"><h4>Impor transaksi</h4><p class="mut" style="margin-bottom:8px">Masukkan banyak transaksi sekaligus dari Excel atau CSV.</p><button class="btn s" onclick="impForm()">Impor dari Excel/CSV</button></div>
+ <div class="card"><h4>Data &amp; cadangan</h4><p class="mut" style="margin-bottom:8px;line-height:1.5">Cadangan otomatis tiap Minggu dini hari ke folder "FINANCUANZ Cadangan" di Google Drive (8 terakhir disimpan). Cadangan terakhir: <b>${d.cadanganTerakhir&&!isNaN(new Date(d.cadanganTerakhir))?new Date(d.cadanganTerakhir).toLocaleString('id-ID'):'belum ada'}</b></p><button class="btn s" onclick="backupNow()">Cadangkan sekarang</button><button class="btn s" onclick="expTx()">Ekspor transaksi (CSV)</button><button class="btn s" onclick="expPf()">Ekspor portofolio (CSV)</button></div>
  <div class="card"><div class="row"><h4>Referensi aset</h4><button class="chip" onclick="asetForm()">+ Tambah</button></div>${d.aset.map(a=>`<div class="lg" onclick="asetForm('${esc(a.ticker)}')" style="cursor:pointer"><span><b>${esc(a.ticker)}</b> <span class="mut">${JN[a.jenis]||''}</span></span><span>${a.harga===''?'-':mn(a.harga,a.currency)}</span></div>`).join('')||'<p class="mut">Aset otomatis ditambahkan saat Anda merekam transaksi.</p>'}</div>
  <div class="card"><div class="row"><h4>Rekening dana nasabah</h4><button class="chip" onclick="rdnForm()">+ Tambah</button></div>${d.rekening.map(r=>`<div class="lg"><span>${esc(r)}</span><button class="chip" onclick="delRdn('${esc(r)}')">Hapus</button></div>`).join('')}</div>
  <button class="btn s" onclick="logout()">Keluar</button>`;
@@ -366,7 +383,7 @@ function profView(){
  <label>PIN lama<input id="p_l" type="password" inputmode="numeric" maxlength="6"></label><label>PIN baru<input id="p_b" type="password" inputmode="numeric" maxlength="6"></label><button class="btn s" onclick="savePin()">Ganti PIN</button><button class="btn s" onclick="closeSheet()">Batal</button>`);
 }
 async function saveProf(){try{const f=$('#p_f').files[0];await api('profil',{nama:$('#p_n').value.trim(),foto:f?await readImg(f):''});await load();closeSheet();go(S.page);toast('Profil disimpan');}catch(e){toast(e.message,false);}}
-async function savePin(){try{await api('ganti',{lama:$('#p_l').value,baru:$('#p_b').value});closeSheet();toast('PIN berhasil diganti');}catch(e){toast(e.message,false);}}
+async function savePin(){try{const nb=$('#p_b').value;await api('ganti',{lama:$('#p_l').value,baru:nb});await setKey(nb);cacheSave();closeSheet();toast('PIN berhasil diganti');}catch(e){toast(e.message,false);}}
 
 
 /* ---------- Biaya default & impor ---------- */
@@ -432,6 +449,23 @@ async function impGo(){
 function tplCsv(){
  const c='tanggal,tipe,jenis,ticker,qty,harga,currency,rdn,catatan,fee,pajak,rdn_tujuan\n2024-03-15,DEPOSIT,,,,5000000,IDR,Stockbit,Setoran awal,,,\n2024-03-18,BUY,SAHAM_ID,BBCA,100,9250,IDR,Stockbit,,1387,,\n2024-06-20,SELL,SAHAM_ID,BBCA,50,9800,IDR,Stockbit,,1225,490,\n2024-07-01,DIVIDEN,SAHAM_ID,BBCA,,125000,IDR,Stockbit,,,,\n2024-08-01,TRANSFER,,,,1000000,IDR,Stockbit,,,,Bibit\n2024-09-01,WITHDRAW,,,,500000,IDR,Stockbit,,,,\n';
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='template-financuanz.csv';a.click();
+}
+
+/* ---------- Ekspor CSV & cadangan ---------- */
+const csvCell=v=>{v=v==null?'':String(v);return/[;"\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;},csvNum=n=>(n===0||n)?String(n).replace('.',','):'';
+function dl(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\uFEFF'+text],{type:'text/csv;charset=utf-8'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);}
+function expTx(){
+ const H='tanggal;tipe;jenis;ticker;qty;harga;currency;rdn;catatan;fee;pajak;rdn_tujuan',tx=[...S.d.transaksi].sort((a,b)=>(a.tanggal+a.dibuat).localeCompare(b.tanggal+b.dibuat));
+ const L=tx.map(t=>{const trade=t.tipe==='BUY'||t.tipe==='SELL',kas=KAS_T.includes(t.tipe);return[t.tanggal,t.tipe,t.jenis==='KAS'?'':t.jenis,kas?'':t.ticker,trade?csvNum(t.qty):'',csvNum(t.harga),t.currency,t.rdn,t.catatan,csvNum(t.fee||''),csvNum(t.pajak||''),t.rdnTujuan||''].map(csvCell).join(';');});
+ dl('financuanz-transaksi-'+today()+'.csv',[H,...L].join('\r\n'));toast(tx.length+' transaksi diekspor');
+}
+function expPf(){
+ const c=calc(),H='ticker;nama;jenis;qty;harga_rata2;harga_kini;mata_uang;modal_idr;nilai_idr;pl_idr;pl_persen;dividen_idr',q=(n,d=0)=>csvNum(Math.round(n*10**d)/10**d);
+ const L=c.hold.map(h=>[h.ticker,h.nama,JN[h.jenis],q(h.qty,8),q(h.avg,2),q(h.pr,2),h.cur,q(h.modal),q(h.nilai),q(h.pl),q(h.pct,2),q(h.div)].map(csvCell).join(';'));
+ dl('financuanz-portofolio-'+today()+'.csv',[H,...L].join('\r\n'));toast('Portofolio diekspor');
+}
+async function backupNow(){
+ try{toast('Membuat cadangan…');const r=await api('backup');await load();go('set');toast('Cadangan dibuat: '+r.nama);}catch(e){toast(e.message,false);}
 }
 if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
 boot();
