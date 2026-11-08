@@ -116,6 +116,7 @@ function insights(c){
  const o=[],T=c.tot;if(!c.hold.length)return[['Mulai dari sini','Catat DEPOSIT ke rekening dana, lalu rekam BUY pertama Anda.']];
  const sh=j=>(c.al[j]||0)/T*100,top=Object.entries(c.al).sort((a,b)=>b[1]-a[1])[0];
  if(top[0]!=='KAS'&&top[1]/T>.5)o.push(['Terlalu terkonsentrasi',`${JN[top[0]]} mencapai ${nf.format(top[1]/T*100)}% portofolio. Pertimbangkan membagi ke jenis aset lain.`]);
+ const tg=S.d.target||{};if(Object.keys(tg).length){const dv=Object.keys(JN).map(j=>[j,sh(j)-(+tg[j]||0)]).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1]))[0];if(Math.abs(dv[1])>5)o.push(['Menyimpang dari target',`${JN[dv[0]]} ${dv[1]>0?'lebih':'kurang'} ${nf.format(Math.abs(dv[1]))} poin dari target. Lihat kartu rebalancing.`]);}
  if(c.hold[0].nilai/T>.35)o.push(['Satu aset dominan',`${c.hold[0].ticker} berbobot ${nf.format(c.hold[0].nilai/T*100)}%. Risiko bertumpu pada satu aset.`]);
  if(sh('CRYPTO')>20)o.push(['Porsi crypto tinggi',`Crypto ${nf.format(sh('CRYPTO'))}% dan sangat fluktuatif. Banyak perencana membatasi di bawah 10–20%.`]);
  if(c.kas<0)o.push(['Saldo kas negatif','Pembelian melebihi deposit. Catat DEPOSIT yang belum terekam agar saldo kas akurat.']);
@@ -188,7 +189,7 @@ async function doReset(){try{await api('reset',{code:$('#g_c').value,pin:$('#g_p
 function shell(){
  const t=[['dash','Dashboard'],['port','Portofolio'],null,['hist','Histori'],['set','Setting']];
  app.innerHTML=`<div id="v"></div><nav>${t.map(x=>x?`<button id="n_${x[0]}" onclick="go('${x[0]}')"><svg viewBox="0 0 24 24" fill="currentColor">${IC[x[0]]}</svg>${x[1]}</button>`:`<button class="fab" aria-label="Rekam transaksi" onclick="txForm()">+</button>`).join('')}</nav>`;
- go(S.page);
+ go(S.page);ensureSnap();
 }
 function go(p){S.page=p;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id==='n_'+p));$('#v').innerHTML={dash,port,hist,set}[p]();window.scrollTo(0,0);}
 const refresh=async()=>{try{await load();go(S.page);}catch(e){toast(e.message,false);}};
@@ -216,6 +217,50 @@ function pieCard(){
 }
 const setPm=m=>{S.pm=m;S.ps=-1;$('#pie').outerHTML=pieCard();};
 const pick=i=>{S.ps=S.ps===i?-1:i;$('#pie').outerHTML=pieCard();};
+S.gp='3M';S.rbx=null;
+const GP={'1M':30,'3M':90,'6M':182,'1Y':365,'Semua':0};
+function ensureSnap(){const sn=S.d.snapshot||[];if(sn.some(x=>x.tanggal===today()))return;
+ api('snap').then(()=>load()).then(()=>{if(S.page==='dash'&&$('#v'))$('#v').innerHTML=dash();}).catch(()=>{});}
+function lineSvg(A,B,l1,l2){
+ const W=300,H=120,all=B?A.concat(B):A,hi=Math.max(...all),lo=Math.min(...all),rg=(hi-lo)||1,X=i=>A.length>1?i*W/(A.length-1):W/2,Y=v=>H-8-(v-lo)/rg*(H-24),P=Z=>Z.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+ return`<svg viewBox="0 0 ${W} ${H+16}" width="100%" role="img" aria-label="Grafik portofolio"><defs><linearGradient id="ar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFC287" stop-opacity=".4"/><stop offset="1" stop-color="#EFC287" stop-opacity="0"/></linearGradient></defs><path d="${P(A)} L${X(A.length-1)} ${H} L0 ${H}Z" fill="url(#ar2)"/>${B?`<path d="${P(B)}" fill="none" stroke="#9db2c4" stroke-width="1.6" stroke-dasharray="4 3"/>`:''}<path d="${P(A)}" fill="none" stroke="#EFC287" stroke-width="2.2"/><circle cx="${X(A.length-1)}" cy="${Y(A[A.length-1])}" r="4.5" fill="#E17807"/><text x="0" y="${H+13}" font-size="9" fill="#9db2c4">${l1}</text><text x="${W}" y="${H+13}" font-size="9" fill="#9db2c4" text-anchor="end">${l2}</text></svg>`;
+}
+function growthCard(c){
+ const sn=[...(S.d.snapshot||[])].sort((a,b)=>a.tanggal.localeCompare(b.tanggal));
+ if(sn.length<2){const m=c.ms;return`<div class="card" id="growth"><h4>Perkembangan portofolio</h4>${m.length>1?lineSvg(m.map(x=>x.v),null,m[0].l,m[m.length-1].l)+'<div class="mut">Garis: modal berjalan per bulan. Grafik nilai pasar muncul setelah snapshot harian terkumpul (minimal 2 hari).</div>':'<p class="mut">Grafik muncul setelah ada transaksi dan snapshot harian.</p>'}</div>`;}
+ const days=GP[S.gp],cut=days?new Date(Date.now()-days*864e5).toISOString().slice(0,10):'';let p=sn.filter(x=>x.tanggal>=cut);if(p.length<2)p=sn.slice(-2);
+ const f=p[0],l=p[p.length-1],pl=(l.nilai-l.modal)-(f.nilai-f.modal);
+ return`<div class="card" id="growth"><div class="row"><h4>Perkembangan nilai</h4><span class="chip ${cl(pl)}">${pl>=0?'▲':'▼'} ${rp(pl)}</span></div><div class="fl">${Object.keys(GP).map(k=>`<button class="${S.gp===k?'on':''}" onclick="setGp('${k}')">${k}</button>`).join('')}</div>${lineSvg(p.map(x=>x.nilai),p.map(x=>x.modal),f.tanggal,l.tanggal)}<div class="mut">Garis emas: nilai pasar investasi. Garis putus-putus: modal. Angka ▲/▼: perubahan untung/rugi berjalan pada periode ini, tidak termasuk setoran baru.</div></div>`;
+}
+const setGp=k=>{S.gp=k;$('#growth').outerHTML=growthCard(calc());};
+function rebal(c,X){
+ const tg=S.d.target||{},T=Object.values(c.al).reduce((a,b)=>a+b,0);
+ const rows=Object.keys(JN).map(j=>{const a=c.al[j]||0,tp=+tg[j]||0,tv=tp/100*T;return{j,a,ap:T?a/T*100:0,tp,d:a-tv};}).filter(r=>r.a>0||r.tp>0);
+ const gaps=rows.filter(r=>r.j!=='KAS'&&r.d<-1),G=gaps.reduce((s,r)=>s-r.d,0);
+ gaps.forEach(r=>r.buy=G?Math.min(-r.d,X*(-r.d)/G):0);return{rows,T};
+}
+function rebalCard(c){
+ const tg=S.d.target||{};
+ if(!Object.values(tg).some(v=>+v>0))return`<div class="card" id="rb"><h4>Target alokasi &amp; rebalancing</h4><p class="mut" style="margin-bottom:8px">Tentukan target porsi tiap jenis aset. Aplikasi akan menunjukkan selisihnya dan berapa yang perlu ditambah atau dikurangi.</p><button class="btn s" onclick="targetForm()">Atur target alokasi</button></div>`;
+ const X=S.rbx==null?Math.max(0,Math.floor(c.kas/1000)*1000):S.rbx,R=rebal(c,X),buys=R.rows.filter(r=>r.buy>0.5),used=buys.reduce((s,r)=>s+r.buy,0);
+ return`<div class="card" id="rb"><div class="row"><h4>Target alokasi &amp; rebalancing</h4><button class="chip" onclick="targetForm()">Ubah</button></div>
+ ${R.rows.map(r=>{const df=r.ap-r.tp,ok=Math.abs(df)<=2;return`<div style="margin:12px 0"><div class="lg" style="padding:0"><span><i style="background:${WR[r.j]}"></i>${JN[r.j]}</span><span>${nf.format(r.ap)}% <span class="mut">/ target ${nf.format(r.tp)}%</span></span></div>
+ <div style="position:relative;height:8px;border-radius:6px;background:var(--inp);margin:6px 0"><div style="width:${Math.min(100,r.ap)}%;height:100%;border-radius:6px;background:${WR[r.j]}"></div><div style="position:absolute;left:${Math.min(100,r.tp)}%;top:-3px;width:2px;height:14px;background:var(--tx)"></div></div>
+ <div style="font-size:12px;font-weight:700" class="${ok?'up':''}">${ok?'Seimbang':df>0?'Kurangi ± '+rp(r.d):'Tambah ± '+rp(-r.d)}</div></div>`;}).join('')}
+ <h4 style="margin-top:14px">Beli tanpa menjual</h4><label>Dana tersedia dari kas (Rp)<input inputmode="decimal" value="${X}" onchange="S.rbx=num(this.value)||0;$('#rb').outerHTML=rebalCard(calc())"></label>
+ ${buys.length?buys.map(r=>`<div class="lg"><span><i style="background:${WR[r.j]}"></i>${JN[r.j]}</span><b>${rp(r.buy)}</b></div>`).join('')+(X-used>1?`<p class="mut">Sisa ${rp(X-used)} tetap di kas karena target lainnya sudah terpenuhi.</p>`:''):'<p class="mut">Tidak ada jenis aset di bawah target, atau dana belum diisi.</p>'}
+ <p class="mut" style="margin-top:8px">Dihitung dari nilai pasar saat ini sesuai target Anda. Ini alat bantu, bukan rekomendasi investasi.</p></div>`;
+}
+function targetForm(){
+ const tg=S.d.target||{};
+ sheet(`<h3>Target alokasi</h3><p class="mut" style="margin-bottom:10px">Isi persentase target tiap jenis aset. Totalnya harus 100%.</p>${Object.keys(JN).map(j=>`<label><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${WR[j]};margin-right:7px"></i>${JN[j]} (%)</span><input class="tg" data-j="${j}" inputmode="decimal" value="${tg[j]||''}" oninput="tgSum()"></label>`).join('')}<div class="row" style="margin:6px 0 4px"><b>Total</b><b id="tg_s">0%</b></div><button class="btn" onclick="saveTarget()">Simpan target</button><button class="btn s" onclick="saveTarget(true)">Hapus target</button><button class="btn s" onclick="closeSheet()">Batal</button>`);tgSum();
+}
+const tgVal=()=>{const o={};document.querySelectorAll('.tg').forEach(e=>{const v=num(e.value);if(v>0)o[e.dataset.j]=v;});return o;};
+function tgSum(){const t=Object.values(tgVal()).reduce((a,b)=>a+b,0),e=$('#tg_s');e.textContent=nf.format(t)+'%';e.className=Math.abs(t-100)<.01?'up':'dn';}
+async function saveTarget(clear){
+ try{const t=clear?{}:tgVal(),sm=Object.values(t).reduce((a,b)=>a+b,0);if(!clear&&Math.abs(sm-100)>.01)throw new Error('Total target harus 100% (sekarang '+nf.format(sm)+'%).');
+  await api('saveTarget',{target:t});await load();closeSheet();go(S.page);toast(clear?'Target dihapus':'Target alokasi disimpan');}catch(e){toast(e.message,false);}
+}
 function dash(){
  const c=calc(),W=300,Hh=110,m=c.ms,mx=Math.max(1,...m.map(x=>Math.max(x.v,x.now||0))),
  X=i=>m.length>1?i*(W/(m.length-1)):W/2,Y=v=>Hh-6-(v/mx)*(Hh-18),
@@ -226,8 +271,9 @@ function dash(){
  <div class="card"><div class="mut">Profit/Loss berjalan</div><b class="${cl(c.fl)}">${rp(c.fl)}</b></div><div class="card"><div class="mut">Profit/Loss terealisasi</div><b class="${cl(c.re)}">${rp(c.re)}</b></div>
  <div class="card"><div class="mut">Dividen diterima</div><b class="up">${rp(c.div)}</b></div><div class="card"><div class="mut">Total return</div><b class="${cl(c.fl+c.re+c.div)}">${rp(c.fl+c.re+c.div)}</b></div></div>
  <div class="card"><h4>Saldo kas per rekening</h4>${Object.entries(c.cash).filter(([n,v])=>Math.abs(v)>0.5).map(([n,v])=>`<div class="lg"><span>${esc(n||'-')}</span><b class="${v<0?'dn':''}">${rp(v)}</b></div>`).join('')||'<p class="mut">Belum ada saldo kas.</p>'}<div class="lg" style="border-top:1px solid var(--bd);margin-top:4px"><span class="mut">Biaya transaksi</span><b>${rp(c.bf)}</b></div><div class="lg"><span class="mut">Pajak</span><b>${rp(c.bp)}</b></div></div>
- <div class="card"><h4>Perkembangan bulanan</h4>${m.length?`<svg viewBox="0 0 ${W} ${Hh+16}" width="100%"><defs><linearGradient id="ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EFC287" stop-opacity=".4"/><stop offset="1" stop-color="#EFC287" stop-opacity="0"/></linearGradient></defs><path d="${path} L${X(m.length-1)} ${Hh} L0 ${Hh}Z" fill="url(#ar)"/><path d="${path}" fill="none" stroke="#EFC287" stroke-width="2.2"/><circle cx="${X(m.length-1)}" cy="${Y(last.now)}" r="4.5" fill="#E17807"/><text x="0" y="${Hh+13}" font-size="9" fill="#9db2c4">${m[0].l}</text><text x="${W}" y="${Hh+13}" font-size="9" fill="#9db2c4" text-anchor="end">${last.l}</text></svg><div class="mut">Garis: modal berjalan. Titik oranye: nilai saat ini.</div>`:'<p class="mut">Grafik muncul setelah ada transaksi.</p>'}</div>
+ ${growthCard(c)}
  ${pieCard()}
+ ${rebalCard(c)}
  <div class="card"><h4>Insight &amp; rekomendasi</h4>${insights(c).map(i=>`<div class="ins"><b>${esc(i[0])}</b>${esc(i[1])}</div>`).join('')}</div>`;
 }
 function port(){
@@ -292,6 +338,7 @@ function set(){
  const d=S.d;return`<h3>Setting</h3>
  <div class="card"><h4>Tampilan</h4><button class="btn s" onclick="toggleTheme()">Ganti mode terang / gelap</button></div>
  <div class="card"><h4>Mata uang</h4><p class="mut">Tampilan utama: Rupiah (Rp). Kurs USD/IDR saat ini: <b>${rp(d.kurs).slice(3)}</b> ${d.kursManual?'(manual)':'(otomatis)'}</p><label>Kurs manual (kosongkan untuk otomatis)<input id="s_k" inputmode="decimal" value="${d.kursManual}"></label><button class="btn s" onclick="saveKurs()">Simpan kurs</button></div>
+ <div class="card"><h4>Target alokasi</h4><p class="mut" style="margin-bottom:8px">Tentukan porsi ideal tiap jenis aset untuk saran rebalancing di Dashboard.</p><button class="btn s" onclick="targetForm()">Atur target alokasi</button></div>
  <div class="card"><h4>Biaya default Saham IHSG</h4><p class="mut" style="margin-bottom:8px">Terisi otomatis di form BUY/SELL dan masih bisa diubah. Isi 0 jika tidak ada. Tersimpan di perangkat ini.</p><div class="g2"><label>Fee beli (%)<input id="s_fb" inputmode="decimal" value="${FEE().b??''}"></label><label>Fee jual (%)<input id="s_fs" inputmode="decimal" value="${FEE().s??''}"></label></div><label>Pajak jual (%)<input id="s_ft" inputmode="decimal" value="${FEE().t??''}"></label><button class="btn s" onclick="saveFee()">Simpan biaya default</button></div>
  <div class="card"><h4>Impor transaksi</h4><p class="mut" style="margin-bottom:8px">Masukkan banyak transaksi sekaligus dari Excel atau CSV.</p><button class="btn s" onclick="impForm()">Impor dari Excel/CSV</button></div>
  <div class="card"><div class="row"><h4>Referensi aset</h4><button class="chip" onclick="asetForm()">+ Tambah</button></div>${d.aset.map(a=>`<div class="lg" onclick="asetForm('${esc(a.ticker)}')" style="cursor:pointer"><span><b>${esc(a.ticker)}</b> <span class="mut">${JN[a.jenis]||''}</span></span><span>${a.harga===''?'-':mn(a.harga,a.currency)}</span></div>`).join('')||'<p class="mut">Aset otomatis ditambahkan saat Anda merekam transaksi.</p>'}</div>
