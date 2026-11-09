@@ -56,6 +56,9 @@ th{color:var(--mut);text-align:left;font-weight:600;padding:8px 6px}td{padding:1
 .seg button.on.div{background:#7c5cd6;color:#fff}.seg button{font-size:13px}.DIVIDEN{background:rgba(167,139,250,.22);color:#b9a4ff}[hidden]{display:none!important}
 .seg button.on.wd{background:#b45309;color:#fff}.seg button.on.tf{background:#0e7490;color:#fff}.WITHDRAW{background:rgba(251,191,36,.2);color:#fbbf24}.TRANSFER{background:rgba(56,189,248,.2);color:#38bdf8}
 textarea{width:100%;margin-top:5px;border-radius:14px;border:1px solid var(--bd);background:var(--inp);color:var(--tx);padding:12px;font:inherit;font-size:13px}
+.ic{flex:none;vertical-align:-3px}.ib{display:grid;place-items:center;padding:0}.chip .ic{vertical-align:-2px}.btn .ic{vertical-align:-4px;margin-right:8px}
+nav button.on .ic{stroke-width:2.2}nav .fab .ic{stroke-width:2.4;width:30px;height:30px}.x{display:grid;place-items:center;padding:0}
+.pg button{display:inline-flex;align-items:center;gap:4px}#toast:not([hidden]){display:flex;gap:8px;align-items:center}
 </style></head><body><div id="app"></div><div id="toast" hidden></div>
 <script>
 window.addEventListener('error',function(e){var a=document.getElementById('app');
@@ -66,7 +69,30 @@ window.addEventListener('error',function(e){var a=document.getElementById('app')
 const API=window.FZ_API||'';  // diatur di config.js
 const JN={SAHAM_ID:'Saham IHSG',SAHAM_US:'Saham & ETF US',CRYPTO:'Crypto',SBN:'Obligasi/SBN/ORI/Sukuk',RD_PU:'Reksadana Pasar Uang',RD_SAHAM:'Reksadana Saham',RD_CAMPURAN:'Reksadana Campuran',RD_PT:'Reksadana Pend. Tetap',KAS:'Kas'};
 const WR={SAHAM_ID:'#EFC287',SAHAM_US:'#E17807',CRYPTO:'#c084fc',SBN:'#38bdf8',RD_PU:'#34d399',RD_SAHAM:'#f472b6',RD_CAMPURAN:'#facc15',RD_PT:'#60a5fa',KAS:'#94a3b8'};
-const IC={dash:'<path d="M4 13h6V4H4zm0 7h6v-5H4zm10 0h6V11h-6zm0-16v5h6V4z"/>',port:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',hist:'<path d="M12 7v5l3 2M4 12a8 8 0 1 0 3-6.2M4 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',set:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3l2-1.5-2-3.5-2.4.8a7 7 0 0 0-1.6-1L14.5 4h-4l-.5 2.8a7 7 0 0 0-1.6 1L6 7 4 10.5 6 12a7 7 0 0 0 0 2l-2 1.5L6 19l2.4-.8a7 7 0 0 0 1.6 1l.5 2.8h4l.5-2.8a7 7 0 0 0 1.6-1l2.4.8 2-3.5-2-1.5a7 7 0 0 0 0-2z" fill="none" stroke="currentColor" stroke-width="1.6"/>'};
+const ICO={
+dash:'<rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/>',
+port:'<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/>',
+hist:'<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/>',
+set:'<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',
+plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+refresh:'<path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>',
+moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
+eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+eyeoff:'<path d="M10.73 5.08A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-2.16 3.19"/><path d="M6.61 6.61A17.1 17.1 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 5.39-1.61"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><path d="m2 2 20 20"/>',
+edit:'<path d="M12 20h9"/><path d="M16.38 3.62a2.12 2.12 0 0 1 3 3L7.5 18.5 3 20l1.5-4.5z"/>',
+trash:'<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M10 11v6"/><path d="M14 11v6"/>',
+x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+left:'<path d="m15 18-6-6 6-6"/>',right:'<path d="m9 18 6-6-6-6"/>',down:'<path d="m6 9 6 6 6-6"/>',
+ur:'<path d="M7 7h10v10"/><path d="M7 17 17 7"/>',dr:'<path d="M7 7l10 10"/><path d="M17 7v10H7"/>',
+arrow:'<path d="M5 12h14"/><path d="m12 5 7 7-7 7"/>',
+filter:'<path d="M3 6h18"/><path d="M7 12h10"/><path d="M10 18h4"/>',
+download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/>'};
+const ic=(n,z=20)=>`<svg class="ic" viewBox="0 0 24 24" width="${z}" height="${z}" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICO[n]}</svg>`;
 const $=s=>document.querySelector(s),app=$('#app');
 const LOGOSVG=`<svg class="logoimg" viewBox="0 0 512 512"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0A426D"/><stop offset="1" stop-color="#03365C"/></linearGradient></defs><rect width="512" height="512" rx="112" fill="url(#lg)"/><path d="M150 380V150h190M150 255h140" fill="none" stroke="#EFC287" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><circle cx="360" cy="360" r="28" fill="#E17807"/></svg>`;
 let first=true;
@@ -79,16 +105,17 @@ async function api(action,p={}){
  const j=await r.json();if(!j.ok){if(j.error==='SESI_HABIS'){logout(true);}throw new Error(j.error);}return j.data;
 }
 const nf=new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}),nr=new Intl.NumberFormat('id-ID',{maximumFractionDigits:0});
-const rp=n=>(n<0?'-':'')+'Rp '+nr.format(Math.abs(Math.round(n)));
-const mn=(n,c)=>c==='USD'?'$'+nf.format(n):rp(n),pc=n=>(n>=0?'+':'')+nf.format(n)+'%',cl=n=>n>=0?'up':'dn';
+const rp=n=>S.mk?'Rp ••••••':(n<0?'-':'')+'Rp '+nr.format(Math.abs(Math.round(n)));
+const arr=n=>S.mk?'':ic(n>=0?'ur':'dr',14);
+const mn=(n,c)=>S.mk?'••••••':c==='USD'?'$'+nf.format(n):rp(n),pc=n=>S.mk?'••%':(n>=0?'+':'')+nf.format(n)+'%',cl=n=>S.mk?'':n>=0?'up':'dn';
 const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function num(v){v=String(v).trim().replace(/\s/g,'');v=/^[1-9]\d{0,2}(\.\d{3})+$/.test(v)?v.replace(/\./g,''):v.replace(',','.');return parseFloat(v);}
-function toast(m,ok=true){const t=$('#toast');t.textContent=(ok?'✓ ':'✕ ')+m;t.style.background=ok?'#0f9d6b':'#d83a3a';t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2800);}
-function sheet(h){closeSheet();const o=document.createElement('div');o.className='ov';o.id='ov';o.innerHTML='<div class="sh"><button class="x" aria-label="Tutup" onclick="closeSheet()">✕</button>'+h+'</div>';o.onclick=e=>{if(e.target===o)closeSheet();};document.body.appendChild(o);}
+function toast(m,ok=true){const t=$('#toast');t.innerHTML=ic(ok?'check':'x',16);t.appendChild(document.createTextNode(m));t.style.background=ok?'#0f9d6b':'#d83a3a';t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2800);}
+function sheet(h){closeSheet();const o=document.createElement('div');o.className='ov';o.id='ov';o.innerHTML='<div class="sh"><button class="x" aria-label="Tutup" onclick="closeSheet()">'+ic('x',18)+'</button>'+h+'</div>';o.onclick=e=>{if(e.target===o)closeSheet();};document.body.appendChild(o);}
 const closeSheet=()=>$('#ov')?.remove();
 function confirmBox(m,fn){window._cf=fn;sheet(`<h3>Konfirmasi</h3><p class="mut" style="margin-bottom:14px">${m}</p><button class="btn d" onclick="closeSheet();_cf()">Ya, hapus</button><button class="btn s" onclick="closeSheet()">Batal</button>`);}
-function toggleTheme(){const t=document.documentElement.dataset.t==='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.fz_t=t;}
+function toggleTheme(){const t=document.documentElement.dataset.t==='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.fz_t=t;if(S.d&&$('#v'))redraw();}
 function readImg(f){return new Promise(r=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=256;const s=Math.min(im.width,im.height);c.getContext('2d').drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,256,256);r(c.toDataURL('image/jpeg',.8));};im.src=URL.createObjectURL(f);});}
 
 /* ---------- hitung portofolio ---------- */
@@ -199,7 +226,7 @@ async function doReg(){
   setSesi(r.token);await setKey(p);await load();toast('Akun berhasil dibuat');shell();}catch(e){toast(e.message,false);}
 }
 function forgotView(){
- app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><button class="x" aria-label="Tutup" onclick="boot()">✕</button><h3>Reset PIN</h3><div id="fg"><label>Email terdaftar<input id="g_e" type="email"></label><button class="btn" onclick="sendCode()">Kirim kode</button></div><button class="btn s" onclick="boot()">Batal</button></div>`;
+ app.innerHTML=`<div class="au"><div class="logo">FINANCUANZ</div><button class="x" aria-label="Tutup" onclick="boot()">${ic('x',18)}</button><h3>Reset PIN</h3><div id="fg"><label>Email terdaftar<input id="g_e" type="email"></label><button class="btn" onclick="sendCode()">Kirim kode</button></div><button class="btn s" onclick="boot()">Batal</button></div>`;
 }
 async function sendCode(){
  try{await api('forgot',{email:$('#g_e').value.trim()});toast('Jika email cocok, kode telah dikirim');
@@ -210,12 +237,12 @@ async function doReset(){try{await api('reset',{code:$('#g_c').value,pin:$('#g_p
 /* ---------- kerangka & halaman ---------- */
 function shell(){
  const t=[['dash','Dashboard'],['port','Portofolio'],null,['hist','Histori'],['set','Setting']];
- app.innerHTML=`<div id="v"></div><nav>${t.map(x=>x?`<button id="n_${x[0]}" onclick="go('${x[0]}')"><svg viewBox="0 0 24 24" fill="currentColor">${IC[x[0]]}</svg>${x[1]}</button>`:`<button class="fab" aria-label="Rekam transaksi" onclick="txForm()">+</button>`).join('')}</nav>`;
+ app.innerHTML=`<div id="v"></div><nav>${t.map(x=>x?`<button id="n_${x[0]}" onclick="go('${x[0]}')">${ic(x[0],24)}${x[1]}</button>`:`<button class="fab" aria-label="Rekam transaksi" onclick="txForm()">${ic('plus',30)}</button>`).join('')}</nav>`;
  go(S.page);ensureSnap();
 }
 function go(p){S.page=p;document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.id==='n_'+p));$('#v').innerHTML={dash,port,hist,set}[p]();window.scrollTo(0,0);}
 const refresh=async()=>{try{await load();go(S.page);}catch(e){toast(e.message,false);}};
-function head(){const p=S.d.profil;return`<div class="row" style="margin-bottom:16px"><div class="row"><div class="ava" onclick="profView()" style="${p.foto?`background-image:url(${p.foto})`:''}">${p.foto?'':esc(p.nama[0])}</div><div><div class="mut">Halo,</div><b>${esc(p.nama)}</b></div></div><div class="row"><button class="ib" onclick="refresh()" aria-label="Muat ulang">↻</button><button class="ib" onclick="toggleTheme()" aria-label="Ganti tema">◐</button></div></div>${S.stale?`<div class="mut" style="margin:-8px 0 10px">${S.stale==='offline'?'Offline · menampilkan data tersimpan':'Memperbarui data…'}</div>`:''}`;}
+function head(){const p=S.d.profil;return`<div class="row" style="margin-bottom:16px"><div class="row"><div class="ava" onclick="profView()" style="${p.foto?`background-image:url(${p.foto})`:''}">${p.foto?'':esc(p.nama[0])}</div><div><div class="mut">Halo,</div><b>${esc(p.nama)}</b></div></div><div class="row"><button class="ib" onclick="toggleHide()" aria-label="${S.hide?'Tampilkan':'Sembunyikan'} nilai investasi">${EYE[S.hide?1:0]}</button><button class="ib" onclick="refresh()" aria-label="Muat ulang">${ic('refresh')}</button><button class="ib" onclick="toggleTheme()" aria-label="Ganti tema">${ic(document.documentElement.dataset.t==='dark'?'sun':'moon')}</button></div></div>${S.stale?`<div class="mut" style="margin:-8px 0 10px">${S.stale==='offline'?'Offline · menampilkan data tersimpan':'Memperbarui data…'}</div>`:''}`;}
 const PAL=['#EFC287','#E17807','#38bdf8','#34d399','#c084fc','#f472b6','#facc15'];
 S.pm='jenis';S.ps=-1;
 function pieData(c){
@@ -252,7 +279,7 @@ function growthCard(c){
  if(sn.length<2){const m=c.ms;return`<div class="card" id="growth"><h4>Perkembangan portofolio</h4>${m.length>1?lineSvg(m.map(x=>x.v),null,m[0].l,m[m.length-1].l)+'<div class="mut">Garis: modal berjalan per bulan. Grafik nilai pasar muncul setelah snapshot harian terkumpul (minimal 2 hari).</div>':'<p class="mut">Grafik muncul setelah ada transaksi dan snapshot harian.</p>'}</div>`;}
  const days=GP[S.gp],cut=days?new Date(Date.now()-days*864e5).toISOString().slice(0,10):'';let p=sn.filter(x=>x.tanggal>=cut);if(p.length<2)p=sn.slice(-2);
  const f=p[0],l=p[p.length-1],pl=(l.nilai-l.modal)-(f.nilai-f.modal);
- return`<div class="card" id="growth"><div class="row"><h4>Perkembangan nilai</h4><span class="chip ${cl(pl)}">${pl>=0?'▲':'▼'} ${rp(pl)}</span></div><div class="fl">${Object.keys(GP).map(k=>`<button class="${S.gp===k?'on':''}" onclick="setGp('${k}')">${k}</button>`).join('')}</div>${lineSvg(p.map(x=>x.nilai),p.map(x=>x.modal),f.tanggal,l.tanggal)}<div class="mut">Garis emas: nilai pasar investasi. Garis putus-putus: modal. Angka ▲/▼: perubahan untung/rugi berjalan pada periode ini, tidak termasuk setoran baru.</div></div>`;
+ return`<div class="card" id="growth"><div class="row"><h4>Perkembangan nilai</h4><span class="chip ${cl(pl)}">${arr(pl)} ${rp(pl)}</span></div><div class="fl">${Object.keys(GP).map(k=>`<button class="${S.gp===k?'on':''}" onclick="setGp('${k}')">${k}</button>`).join('')}</div>${lineSvg(p.map(x=>x.nilai),p.map(x=>x.modal),f.tanggal,l.tanggal)}<div class="mut">Garis emas: nilai pasar investasi. Garis putus-putus: modal. Angka dengan panah naik/turun: perubahan untung/rugi berjalan pada periode ini, tidak termasuk setoran baru.</div></div>`;
 }
 const setGp=k=>{S.gp=k;$('#growth').outerHTML=growthCard(calc());};
 function rebal(c,X){
@@ -287,7 +314,7 @@ function priceSvg(P,pr){
  const W=300,H=110,ts=P.map(p=>Date.parse(p.t)),t0=Math.min(...ts),t1=Math.max(...ts),vals=P.map(p=>p.p).concat(P.map(p=>p.avg).filter(v=>v!=null),pr!=null?[pr]:[]),hi=Math.max(...vals),lo=Math.min(...vals),rg=(hi-lo)||1;
  const X=i=>t1>t0?(ts[i]-t0)/(t1-t0)*(W-16)+8:W/2,Y=v=>H-10-(v-lo)/rg*(H-26),av=P.map((p,i)=>p.avg!=null?X(i).toFixed(1)+','+Y(p.avg).toFixed(1):null).filter(Boolean);
  return`<svg viewBox="0 0 ${W} ${H+16}" width="100%" role="img" aria-label="Harga transaksi dan harga rata-rata">${pr!=null?`<line x1="0" x2="${W}" y1="${Y(pr)}" y2="${Y(pr)}" stroke="#E17807" stroke-dasharray="4 3"/>`:''}${av.length>1?`<polyline points="${av.join(' ')}" fill="none" stroke="#EFC287" stroke-width="2"/>`:''}${P.map((p,i)=>`<circle cx="${X(i).toFixed(1)}" cy="${Y(p.p).toFixed(1)}" r="4.5" fill="${p.tp==='BUY'?'#34d399':'#ff6b6b'}"/>`).join('')}<text x="0" y="${H+13}" font-size="9" fill="#9db2c4">${P[0].t}</text><text x="${W}" y="${H+13}" font-size="9" fill="#9db2c4" text-anchor="end">${P[P.length-1].t}</text></svg>
- <div class="mut" style="font-size:11px;line-height:1.6"><span class="up">●</span> beli · <span class="dn">●</span> jual · <span style="color:#EFC287">━</span> harga rata-rata · <span style="color:#E17807">╍</span> harga kini</div>`;
+ <div class="mut" style="font-size:11px;line-height:1.6"><i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--up)"></i> beli · <i style="display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dn)"></i> jual · <i style="display:inline-block;width:14px;height:2px;background:#EFC287;vertical-align:middle"></i> harga rata-rata · <i style="display:inline-block;width:14px;height:0;border-top:2px dashed #E17807;vertical-align:middle"></i> harga kini</div>`;
 }
 function assetView(tk){
  const d=S.d,c=calc(),A=d.aset.find(x=>x.ticker===tk)||{},h=c.hold.find(x=>x.ticker===tk),all=d.transaksi.filter(t=>t.ticker===tk&&['BUY','SELL','DIVIDEN'].includes(t.tipe));
@@ -299,7 +326,7 @@ function assetView(tk){
  const cur=A.currency||(all[0]&&all[0].currency)||'IDR',pr=A.harga!==''&&A.harga!=null?A.harga:null,T=Object.values(c.al).reduce((a,b)=>a+b,0)||1;
  const rl=c.rt[tk]||0,dv=c.db[tk]||0,tr=(h?h.pl:0)+rl+dv,row=(l,v,k='')=>`<div class="lg"><span class="mut">${l}</span><b class="${k}">${v}</b></div>`;
  sheet(`<h3>${esc(tk)}</h3><p class="mut" style="margin:-8px 0 12px">${esc(A.nama||tk)}${A.jenis?' · '+JN[A.jenis]:''}</p>
- <div class="row" style="margin-bottom:8px"><div><div class="mut">Harga kini</div><div class="big" style="font-size:26px">${pr!=null?mn(pr,cur):'-'}</div></div>${h?`<span class="chip ${cl(h.pl)}">${h.pl>=0?'▲':'▼'} ${pc(h.pct)}</span>`:'<span class="chip">Tidak dimiliki</span>'}</div>
+ <div class="row" style="margin-bottom:8px"><div><div class="mut">Harga kini</div><div class="big" style="font-size:26px">${pr!=null?mn(pr,cur):'-'}</div></div>${h?`<span class="chip ${cl(h.pl)}">${arr(h.pl)} ${pc(h.pct)}</span>`:'<span class="chip">Tidak dimiliki</span>'}</div>
  ${P.length?priceSvg(P,pr):''}
  <div class="card" style="margin-top:10px">${row('Jumlah (unit/lembar)',h?nf.format(h.qty):'0')}${h?row('Harga rata-rata',mn(h.avg,h.cur))+row('Modal',rp(h.modal))+row('Nilai saat ini',rp(h.nilai))+row('Porsi portofolio',nf.format(h.nilai/T*100)+'%')+row('Profit/loss berjalan',rp(h.pl),cl(h.pl)):''}${row('Profit/loss terealisasi',rp(rl),cl(rl))}${row('Dividen diterima',rp(dv),dv?'up':'')}${row('Biaya &amp; pajak',rp(c.fb[tk]||0))}${row('Total return',rp(tr),cl(tr))}</div>
  <div class="g2"><button class="btn" data-t="${esc(tk)}" onclick="txForm(null,{tipe:'BUY',ticker:this.dataset.t})">Beli</button><button class="btn s" data-t="${esc(tk)}" ${h?'':'disabled'} onclick="txForm(null,{tipe:'SELL',ticker:this.dataset.t})">Jual</button></div>
@@ -313,31 +340,35 @@ function jenisCard(c){
  return`<div class="card" id="ac"><div class="row"><h4 style="margin:0">Nilai investasi per jenis</h4><b>${rp(c.nilai)}</b></div>
  ${L.map((g,i)=>{const pct=g.modal?g.pl/g.modal*100:0,open=!!S.ex[g.j];return`<div style="border-top:1px solid var(--bd);margin-top:${i?0:10}px">
   <div class="row" style="padding:12px 0;cursor:pointer" data-j="${g.j}" onclick="S.ex[this.dataset.j]=!S.ex[this.dataset.j];$('#ac').outerHTML=jenisCard(calc())">
-   <div style="display:flex;gap:10px;align-items:center;min-width:0"><i style="flex:none;width:11px;height:11px;border-radius:50%;background:${WR[g.j]}"></i><div style="min-width:0"><b>${JN[g.j]}</b><div class="mut" style="font-size:12px">${g.it.length} aset · ${nf.format(g.nilai/N*100)}% ${open?'▾':'▸'}</div></div></div>
-   <div style="text-align:right"><b>${rp(g.nilai)}</b><div class="${cl(g.pl)}" style="font-size:12px">${g.pl>=0?'▲':'▼'} ${pc(pct)} · ${rp(g.pl)}</div></div></div>
+   <div style="display:flex;gap:10px;align-items:center;min-width:0"><i style="flex:none;width:11px;height:11px;border-radius:50%;background:${WR[g.j]}"></i><div style="min-width:0"><b>${JN[g.j]}</b><div class="mut" style="font-size:12px">${g.it.length} aset · ${nf.format(g.nilai/N*100)}% ${ic(open?'down':'right',13)}</div></div></div>
+   <div style="text-align:right;flex:none;white-space:nowrap;padding-left:8px"><b>${rp(g.nilai)}</b><div class="${cl(g.pl)}" style="font-size:12px">${arr(g.pl)} ${pc(pct)} · ${rp(g.pl)}</div></div></div>
   ${open?g.it.map(h=>`<div class="row" style="padding:8px 0 8px 21px;cursor:pointer;font-size:13px" data-t="${esc(h.ticker)}" onclick="assetView(this.dataset.t)"><span><b>${esc(h.ticker)}</b> <span class="mut">${nf.format(h.qty)} unit</span></span><span style="text-align:right">${rp(h.nilai)} <span class="${cl(h.pl)}">${pc(h.pct)}</span></span></div>`).join(''):''}</div>`;}).join('')||'<p class="mut" style="margin-top:8px">Belum ada investasi. Rekam transaksi BUY untuk melihatnya di sini.</p>'}
  <p class="mut" style="font-size:12px;margin-top:8px">Ketuk jenis untuk melihat rincian asetnya. Kas tidak termasuk, lihat kartu saldo kas.</p></div>`;
 }
-function dash(){
+const EYE=[ic('eye'),ic('eyeoff')];
+S.hide=!!localStorage.fz_hide;
+function toggleHide(){S.hide=!S.hide;if(S.hide)localStorage.fz_hide='1';else localStorage.removeItem('fz_hide');redraw();}
+function dash(){S.mk=!!S.hide;try{return dashRaw();}finally{S.mk=false;}}
+function dashRaw(){
  const c=calc(),W=300,Hh=110,m=c.ms,mx=Math.max(1,...m.map(x=>Math.max(x.v,x.now||0))),
  X=i=>m.length>1?i*(W/(m.length-1)):W/2,Y=v=>Hh-6-(v/mx)*(Hh-18),
  path=m.map((x,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(x.v).toFixed(1)).join(' '),
  last=m[m.length-1];
- return head()+`<div class="card"><div class="mut">Nilai investasi saat ini</div><div class="big">${rp(c.nilai)}</div><span class="chip ${cl(c.fl)}">${c.fl>=0?'▲':'▼'} ${rp(c.fl)} (${pc(c.modal?c.fl/c.modal*100:0)})</span></div>
- <div class="g2"><div class="card"><div class="mut">Total investasi</div><b>${rp(c.modal)}</b></div><div class="card"><div class="mut">Saldo kas</div><b class="${c.kas<0?'dn':''}">${rp(c.kas)}</b></div>
+ return head()+`<div class="card"><div class="mut">Nilai investasi saat ini</div><div class="big">${rp(c.nilai)}</div><span class="chip ${cl(c.fl)}">${arr(c.fl)} ${rp(c.fl)} (${pc(c.modal?c.fl/c.modal*100:0)})</span></div>
+ <div class="g2"><div class="card"><div class="mut">Total investasi</div><b>${rp(c.modal)}</b></div><div class="card"><div class="mut">Saldo kas</div><b class="${!S.mk&&c.kas<0?'dn':''}">${rp(c.kas)}</b></div>
  <div class="card"><div class="mut">Profit/Loss berjalan</div><b class="${cl(c.fl)}">${rp(c.fl)}</b></div><div class="card"><div class="mut">Profit/Loss terealisasi</div><b class="${cl(c.re)}">${rp(c.re)}</b></div>
  <div class="card"><div class="mut">Dividen diterima</div><b class="up">${rp(c.div)}</b></div><div class="card"><div class="mut">Total return</div><b class="${cl(c.fl+c.re+c.div)}">${rp(c.fl+c.re+c.div)}</b></div></div>
- ${jenisCard(c)}
+ ${S.hide?`<div class="card" style="text-align:center;padding:26px 16px"><div style="font-weight:700;font-size:15px">Rincian investasi disembunyikan</div><p class="mut" style="margin:6px 0 14px">Grafik, alokasi, rekening dana, dan rekomendasi tidak ditampilkan.</p><button class="btn s" style="margin:0" onclick="toggleHide()">Tampilkan</button></div>`:`${jenisCard(c)}
  <div class="card"><h4>Saldo kas per rekening</h4>${Object.entries(c.cash).filter(([n,v])=>Math.abs(v)>0.5).map(([n,v])=>`<div class="lg"><span>${esc(n||'-')}</span><b class="${v<0?'dn':''}">${rp(v)}</b></div>`).join('')||'<p class="mut">Belum ada saldo kas.</p>'}<div class="lg" style="border-top:1px solid var(--bd);margin-top:4px"><span class="mut">Biaya transaksi</span><b>${rp(c.bf)}</b></div><div class="lg"><span class="mut">Pajak</span><b>${rp(c.bp)}</b></div></div>
  ${growthCard(c)}
  ${pieCard()}
  ${rebalCard(c)}
- <div class="card"><h4>Insight &amp; rekomendasi</h4>${insights(c).map(i=>`<div class="ins"><b>${esc(i[0])}</b>${esc(i[1])}</div>`).join('')}</div>`;
+ <div class="card"><h4>Insight &amp; rekomendasi</h4>${insights(c).map(i=>`<div class="ins"><b>${esc(i[0])}</b>${esc(i[1])}</div>`).join('')}</div>`}`;
 }
 function port(){
  const c=calc(),G={};c.hold.forEach(h=>(G[h.jenis]=G[h.jenis]||[]).push(h));
  const card=h=>`<div class="card" style="cursor:pointer" data-t="${esc(h.ticker)}" onclick="assetView(this.dataset.t)"><div class="row"><div><b>${esc(h.ticker)}</b>${h.nama&&h.nama!==h.ticker?`<div class="mut">${esc(h.nama)}</div>`:''}</div><div style="text-align:right"><b class="${cl(h.pl)}">${rp(h.pl)}</b><div class="${cl(h.pl)}" style="font-size:13px">${pc(h.pct)}</div></div></div>
- <div class="g2 mut" style="margin-top:10px"><span>Qty: ${nf.format(h.qty)}</span><span>Nilai: ${rp(h.nilai)}</span><span>Rata-rata: ${mn(h.avg,h.cur)}</span><span>Harga kini: ${mn(h.pr,h.cur)}</span>${h.div?`<span class="up">Dividen: ${rp(h.div)}</span>`:''}</div><div class="mut" style="text-align:right;font-size:12px;margin-top:8px">Lihat detail ›</div></div>`;
+ <div class="g2 mut" style="margin-top:10px"><span>Qty: ${nf.format(h.qty)}</span><span>Nilai: ${rp(h.nilai)}</span><span>Rata-rata: ${mn(h.avg,h.cur)}</span><span>Harga kini: ${mn(h.pr,h.cur)}</span>${h.div?`<span class="up">Dividen: ${rp(h.div)}</span>`:''}</div><div class="mut" style="text-align:right;font-size:12px;margin-top:8px">Lihat detail ${ic('right',14)}</div></div>`;
  const sec=j=>{const L=G[j],nl=L.reduce((a,h)=>a+h.nilai,0),pl=L.reduce((a,h)=>a+h.pl,0),mo=L.reduce((a,h)=>a+h.modal,0);
   return`<div class="row" style="margin:20px 2px 10px"><div style="display:flex;gap:8px;align-items:center"><i style="width:11px;height:11px;border-radius:50%;background:${WR[j]}"></i><b style="font-size:16px">${JN[j]}</b><span class="mut" style="font-size:12px">${L.length} aset</span></div><div style="text-align:right"><b>${rp(nl)}</b><div class="${cl(pl)}" style="font-size:12px">${pc(mo?pl/mo*100:0)}</div></div></div>`+L.map(card).join('');};
  return`<h3>Portofolio</h3><div class="card row"><div><div class="mut">Total P/L berjalan</div><b class="${cl(c.fl)}">${rp(c.fl)}</b></div><span class="chip ${cl(c.fl)}">${pc(c.modal?c.fl/c.modal*100:0)}</span></div>`+
@@ -353,14 +384,14 @@ function histBody(){
  const L=histFilter(),n=Math.max(1,Math.ceil(L.length/10)),k=S.d.kurs,I=(v,c)=>c==='USD'?v*k:v;S.hp=Math.min(S.hp,n);
  const sm=t=>L.filter(x=>x.tipe===t).reduce((a,x)=>a+I(x.qty*x.harga,x.currency),0),by=L.reduce((a,x)=>a+I((x.fee||0)+(x.pajak||0),x.currency),0);
  return`<div class="mut" style="margin-bottom:8px">${L.length} transaksi${sm('BUY')?' · Beli '+rp(sm('BUY')):''}${sm('SELL')?' · Jual '+rp(sm('SELL')):''}${sm('DIVIDEN')?' · Dividen '+rp(sm('DIVIDEN')):''}${by?' · Biaya '+rp(by):''}</div>
- <div class="card tw"><table><tr><th>Tanggal</th><th>Jenis</th><th>Simbol</th><th>Tipe</th><th>Qty</th><th>Harga</th><th>Biaya</th><th>Catatan</th><th></th></tr>${L.slice((S.hp-1)*10,S.hp*10).map(t=>`<tr><td>${t.tanggal}</td><td>${JN[t.jenis]||'-'}</td><td><b ${['BUY','SELL','DIVIDEN'].includes(t.tipe)?`data-t="${esc(t.ticker)}" onclick="assetView(this.dataset.t)" style="cursor:pointer;text-decoration:underline dotted"`:''}>${t.tipe==='TRANSFER'?esc(t.rdn)+' → '+esc(t.rdnTujuan):esc(t.ticker)}</b></td><td><span class="bdg ${t.tipe}">${t.tipe}</span></td><td>${t.tipe==='BUY'||t.tipe==='SELL'?nf.format(t.qty):'-'}</td><td>${mn(t.harga,t.currency)}</td><td>${t.fee+t.pajak?mn(t.fee+t.pajak,t.currency):'-'}</td><td>${esc(t.catatan)}</td><td><button class="ib" style="width:34px;height:34px;font-size:14px" onclick="txForm('${t.id}')">✎</button> <button class="ib" style="width:34px;height:34px;font-size:14px" onclick="delTx('${t.id}')">🗑</button></td></tr>`).join('')||'<tr><td colspan="9" class="mut">Tidak ada transaksi yang cocok.</td></tr>'}</table></div>
- <div class="pg"><button onclick="S.hp--;go('hist')" ${S.hp<=1?'disabled':''}>‹ Sebelumnya</button><span class="mut">${S.hp} / ${n}</span><button onclick="S.hp++;go('hist')" ${S.hp>=n?'disabled':''}>Berikutnya ›</button></div>`;
+ <div class="card tw"><table><tr><th>Tanggal</th><th>Jenis</th><th>Simbol</th><th>Tipe</th><th>Qty</th><th>Harga</th><th>Biaya</th><th>Catatan</th><th></th></tr>${L.slice((S.hp-1)*10,S.hp*10).map(t=>`<tr><td>${t.tanggal}</td><td>${JN[t.jenis]||'-'}</td><td><b ${['BUY','SELL','DIVIDEN'].includes(t.tipe)?`data-t="${esc(t.ticker)}" onclick="assetView(this.dataset.t)" style="cursor:pointer;text-decoration:underline dotted"`:''}>${t.tipe==='TRANSFER'?esc(t.rdn)+' '+ic('arrow',13)+' '+esc(t.rdnTujuan):esc(t.ticker)}</b></td><td><span class="bdg ${t.tipe}">${t.tipe}</span></td><td>${t.tipe==='BUY'||t.tipe==='SELL'?nf.format(t.qty):'-'}</td><td>${mn(t.harga,t.currency)}</td><td>${t.fee+t.pajak?mn(t.fee+t.pajak,t.currency):'-'}</td><td>${esc(t.catatan)}</td><td><button class="ib" style="width:34px;height:34px;font-size:14px" onclick="txForm('${t.id}')">${ic('edit',16)}</button> <button class="ib" style="width:34px;height:34px;font-size:14px" onclick="delTx('${t.id}')">${ic('trash',16)}</button></td></tr>`).join('')||'<tr><td colspan="9" class="mut">Tidak ada transaksi yang cocok.</td></tr>'}</table></div>
+ <div class="pg"><button onclick="S.hp--;go('hist')" ${S.hp<=1?'disabled':''}>${ic('left',16)} Sebelumnya</button><span class="mut">${S.hp} / ${n}</span><button onclick="S.hp++;go('hist')" ${S.hp>=n?'disabled':''}>Berikutnya ${ic('right',16)}</button></div>`;
 }
 const hb=()=>{const e=$('#hb');if(e)e.innerHTML=histBody();};
 function hist(){
  const nF=[S.fj,S.fr,S.df,S.dt].filter(Boolean).length;
  return`<h3>Histori transaksi</h3>
- <div class="row" style="gap:8px;margin-bottom:10px"><input id="h_q" type="search" placeholder="Cari simbol, catatan, rekening…" value="${esc(S.q)}" oninput="S.q=this.value;S.hp=1;hb()" style="margin:0"><button class="chip" style="height:50px;padding:0 16px;font-size:14px;border:1px solid ${nF?'var(--org)':'var(--bd)'};cursor:pointer;color:var(--tx)" onclick="S.fo=!S.fo;go('hist')">Filter${nF?' ('+nF+')':''}</button></div>
+ <div class="row" style="gap:8px;margin-bottom:10px"><input id="h_q" type="search" placeholder="Cari simbol, catatan, rekening…" value="${esc(S.q)}" oninput="S.q=this.value;S.hp=1;hb()" style="margin:0"><button class="chip" style="height:50px;padding:0 16px;font-size:14px;border:1px solid ${nF?'var(--org)':'var(--bd)'};cursor:pointer;color:var(--tx)" onclick="S.fo=!S.fo;go('hist')">${ic('filter',16)} Filter${nF?' ('+nF+')':''}</button></div>
  ${S.fo?`<div class="card"><div class="g2"><label>Dari tanggal<input type="date" value="${S.df}" onchange="S.df=this.value;S.hp=1;hb()"></label><label>Sampai tanggal<input type="date" value="${S.dt}" onchange="S.dt=this.value;S.hp=1;hb()"></label></div>
  <div class="g2"><label>Jenis aset<select onchange="S.fj=this.value;S.hp=1;hb()"><option value="">Semua</option>${Object.keys(JN).map(k=>`<option value="${k}" ${S.fj===k?'selected':''}>${JN[k]}</option>`).join('')}</select></label>
  <label>Rekening dana<select onchange="S.fr=this.value;S.hp=1;hb()"><option value="">Semua</option>${S.d.rekening.map(x=>`<option ${S.fr===x?'selected':''}>${esc(x)}</option>`).join('')}</select></label></div>
@@ -415,17 +446,23 @@ async function saveTx(id){
 }
 
 /* ---------- setting & profil ---------- */
+S.ap=1;
+function asetCard(){
+ const L=[...S.d.aset].sort((a,b)=>a.ticker.localeCompare(b.ticker)),n=Math.max(1,Math.ceil(L.length/10));S.ap=Math.min(Math.max(1,S.ap),n);
+ return`<div class="card" id="asc"><div class="row"><h4>Referensi aset <span class="mut" style="font-weight:400">(${L.length})</span></h4><button class="chip" onclick="asetForm()">+ Tambah</button></div>${L.slice((S.ap-1)*10,S.ap*10).map(a=>`<div class="lg" data-t="${esc(a.ticker)}" onclick="asetForm(this.dataset.t)" style="cursor:pointer"><span><b>${esc(a.ticker)}</b> <span class="mut">${JN[a.jenis]||''}</span></span><span>${a.harga===''?'-':mn(a.harga,a.currency)}</span></div>`).join('')||'<p class="mut">Aset otomatis ditambahkan saat Anda merekam transaksi.</p>'}${n>1?`<div class="pg"><button onclick="asetPg(-1)" ${S.ap<=1?'disabled':''}>${ic('left',16)} Sebelumnya</button><span class="mut">${S.ap} / ${n}</span><button onclick="asetPg(1)" ${S.ap>=n?'disabled':''}>Berikutnya ${ic('right',16)}</button></div>`:''}</div>`;
+}
+const asetPg=d=>{S.ap+=d;$('#asc').outerHTML=asetCard();};
 function set(){
  const d=S.d;return`<h3>Setting</h3>
- <div class="card"><h4>Tampilan</h4><button class="btn s" onclick="toggleTheme()">Ganti mode terang / gelap</button></div>
+ <div class="card"><h4>Tampilan</h4><button class="btn s" onclick="toggleTheme()">${ic(document.documentElement.dataset.t==='dark'?'sun':'moon',18)}Ganti mode terang / gelap</button></div>
  <div class="card"><h4>Mata uang</h4><p class="mut">Tampilan utama: Rupiah (Rp). Kurs USD/IDR saat ini: <b>${rp(d.kurs).slice(3)}</b> ${d.kursManual?'(manual)':'(otomatis)'}</p><label>Kurs manual (kosongkan untuk otomatis)<input id="s_k" inputmode="decimal" value="${d.kursManual}"></label><button class="btn s" onclick="saveKurs()">Simpan kurs</button></div>
  <div class="card"><h4>Target alokasi</h4><p class="mut" style="margin-bottom:8px">Tentukan porsi ideal tiap jenis aset untuk saran rebalancing di Dashboard.</p><button class="btn s" onclick="targetForm()">Atur target alokasi</button></div>
  <div class="card"><h4>Biaya default Saham IHSG</h4><p class="mut" style="margin-bottom:8px">Terisi otomatis di form BUY/SELL dan masih bisa diubah. Isi 0 jika tidak ada. Tersimpan di perangkat ini.</p><div class="g2"><label>Fee beli (%)<input id="s_fb" inputmode="decimal" value="${FEE().b??''}"></label><label>Fee jual (%)<input id="s_fs" inputmode="decimal" value="${FEE().s??''}"></label></div><label>Pajak jual (%)<input id="s_ft" inputmode="decimal" value="${FEE().t??''}"></label><button class="btn s" onclick="saveFee()">Simpan biaya default</button></div>
- <div class="card"><h4>Impor transaksi</h4><p class="mut" style="margin-bottom:8px">Masukkan banyak transaksi sekaligus dari Excel atau CSV.</p><button class="btn s" onclick="impForm()">Impor dari Excel/CSV</button></div>
- <div class="card"><h4>Data &amp; cadangan</h4><p class="mut" style="margin-bottom:8px;line-height:1.5">Cadangan otomatis tiap Minggu dini hari ke folder "FINANCUANZ Cadangan" di Google Drive (8 terakhir disimpan). Cadangan terakhir: <b>${d.cadanganTerakhir&&!isNaN(new Date(d.cadanganTerakhir))?new Date(d.cadanganTerakhir).toLocaleString('id-ID'):'belum ada'}</b></p><button class="btn s" onclick="backupNow()">Cadangkan sekarang</button><button class="btn s" onclick="expTx()">Ekspor transaksi (CSV)</button><button class="btn s" onclick="expPf()">Ekspor portofolio (CSV)</button></div>
- <div class="card"><div class="row"><h4>Referensi aset</h4><button class="chip" onclick="asetForm()">+ Tambah</button></div>${d.aset.map(a=>`<div class="lg" onclick="asetForm('${esc(a.ticker)}')" style="cursor:pointer"><span><b>${esc(a.ticker)}</b> <span class="mut">${JN[a.jenis]||''}</span></span><span>${a.harga===''?'-':mn(a.harga,a.currency)}</span></div>`).join('')||'<p class="mut">Aset otomatis ditambahkan saat Anda merekam transaksi.</p>'}</div>
+ <div class="card"><h4>Impor transaksi</h4><p class="mut" style="margin-bottom:8px">Masukkan banyak transaksi sekaligus dari Excel atau CSV.</p><button class="btn s" onclick="impForm()">${ic('upload',18)}Impor dari Excel/CSV</button></div>
+ <div class="card"><h4>Data &amp; cadangan</h4><p class="mut" style="margin-bottom:8px;line-height:1.5">Cadangan otomatis tiap Minggu dini hari ke folder "FINANCUANZ Cadangan" di Google Drive (8 terakhir disimpan). Cadangan terakhir: <b>${d.cadanganTerakhir&&!isNaN(new Date(d.cadanganTerakhir))?new Date(d.cadanganTerakhir).toLocaleString('id-ID'):'belum ada'}</b></p><button class="btn s" onclick="backupNow()">${ic('shield',18)}Cadangkan sekarang</button><button class="btn s" onclick="expTx()">${ic('download',18)}Ekspor transaksi (CSV)</button><button class="btn s" onclick="expPf()">${ic('download',18)}Ekspor portofolio (CSV)</button></div>
+ ${asetCard()}
  <div class="card"><div class="row"><h4>Rekening dana nasabah</h4><button class="chip" onclick="rdnForm()">+ Tambah</button></div>${d.rekening.map(r=>`<div class="lg"><span>${esc(r)}</span><button class="chip" onclick="delRdn('${esc(r)}')">Hapus</button></div>`).join('')}</div>
- <button class="btn s" onclick="logout()">Keluar</button>`;
+ <button class="btn s" onclick="logout()">${ic('logout',18)}Keluar</button>`;
 }
 async function saveKurs(){try{await api('setKurs',{kurs:num($('#s_k').value)||''});await load();go('set');toast('Kurs disimpan');}catch(e){toast(e.message,false);}}
 function asetForm(t){
