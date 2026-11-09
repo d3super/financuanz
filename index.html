@@ -58,7 +58,12 @@ th{color:var(--mut);text-align:left;font-weight:600;padding:8px 6px}td{padding:1
 textarea{width:100%;margin-top:5px;border-radius:14px;border:1px solid var(--bd);background:var(--inp);color:var(--tx);padding:12px;font:inherit;font-size:13px}
 </style></head><body><div id="app"></div><div id="toast" hidden></div>
 <script>
-const API='https://script.google.com/macros/s/AKfycbw9W2FZ6SItwlhQH00iy-CFAZoINhhz6emE2ubYX3IeF4tOPnh98Gx7ZYWWDVmwmSk0/exec';  // <- tempel URL Web App Apps Script di sini
+window.addEventListener('error',function(e){var a=document.getElementById('app');
+ if(a&&!a.innerHTML.trim())a.innerHTML='<div style="max-width:380px;margin:18vh auto;padding:0 20px;font-family:sans-serif;color:#F3F3F5;line-height:1.5"><b style="font-size:18px">Aplikasi gagal dimuat</b><p style="opacity:.8;margin:10px 0">Kemungkinan file index.html belum terunggah utuh atau terubah saat diedit.</p><p style="font-size:12px;opacity:.7;word-break:break-word">Detail: '+String(e.message||'error').replace(/[<>&]/g,'')+(e.lineno?' (baris '+e.lineno+')':'')+'</p><button onclick="location.reload()" style="margin-top:14px;padding:12px 20px;border:0;border-radius:12px;background:#E17807;color:#fff;font-weight:700">Muat ulang</button></div>';});
+</script>
+<script src="config.js"></script>
+<script>
+const API=window.FZ_API||'';  // diatur di config.js
 const JN={SAHAM_ID:'Saham IHSG',SAHAM_US:'Saham & ETF US',CRYPTO:'Crypto',SBN:'Obligasi/SBN/ORI/Sukuk',RD_PU:'Reksadana Pasar Uang',RD_SAHAM:'Reksadana Saham',RD_CAMPURAN:'Reksadana Campuran',RD_PT:'Reksadana Pend. Tetap',KAS:'Kas'};
 const WR={SAHAM_ID:'#EFC287',SAHAM_US:'#E17807',CRYPTO:'#c084fc',SBN:'#38bdf8',RD_PU:'#34d399',RD_SAHAM:'#f472b6',RD_CAMPURAN:'#facc15',RD_PT:'#60a5fa',KAS:'#94a3b8'};
 const IC={dash:'<path d="M4 13h6V4H4zm0 7h6v-5H4zm10 0h6V11h-6zm0-16v5h6V4z"/>',port:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>',hist:'<path d="M12 7v5l3 2M4 12a8 8 0 1 0 3-6.2M4 4v4h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',set:'<path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7-3l2-1.5-2-3.5-2.4.8a7 7 0 0 0-1.6-1L14.5 4h-4l-.5 2.8a7 7 0 0 0-1.6 1L6 7 4 10.5 6 12a7 7 0 0 0 0 2l-2 1.5L6 19l2.4-.8a7 7 0 0 0 1.6 1l.5 2.8h4l.5-2.8a7 7 0 0 0 1.6-1l2.4.8 2-3.5-2-1.5a7 7 0 0 0 0-2z" fill="none" stroke="currentColor" stroke-width="1.6"/>'};
@@ -130,6 +135,7 @@ function insights(c){
 /* ---------- autentikasi ---------- */
 function splash(){app.innerHTML=`<div class="spl">${LOGOSVG}<div class="logo">FINANCUANZ</div><div class="ld"><i></i></div><p class="mut">Memuat aplikasi…</p></div>`;}
 async function boot(){
+ if(!/^https?:\/\//.test(API)){app.innerHTML=`<div class="au" style="text-align:center">${LOGOSVG}<div class="logo">FINANCUANZ</div><p style="margin:12px 0;line-height:1.5"><b>Alamat server belum diatur.</b></p><p class="mut" style="line-height:1.5">Buka file <b>config.js</b>, ganti tulisan GANTI_DENGAN_URL_WEB_APP dengan URL Web App Apps Script Anda (berakhiran /exec), lalu unggah ulang.</p></div>`;return;}
  splash();const w=first?new Promise(r=>setTimeout(r,localStorage.fz_cache?700:1400)):Promise.resolve();first=false;
  if(S.token&&Date.now()>Number(localStorage.fz_exp||0)){S.token='';S.key=null;sessionStorage.removeItem('fz_k');delete localStorage.fz_token;delete localStorage.fz_exp;toast('Aplikasi terkunci karena tidak aktif 1 jam. Masukkan PIN untuk masuk lagi.',false);}
  if(S.token){try{
@@ -300,6 +306,18 @@ function assetView(tk){
  <h4 style="margin-top:16px">Riwayat transaksi <span class="mut" style="font-weight:400">(ketuk untuk mengubah)</span></h4>${[...all].sort((a,b)=>(b.tanggal+b.dibuat).localeCompare(a.tanggal+a.dibuat)).map(t=>`<div class="lg" style="cursor:pointer" onclick="txForm('${t.id}')"><span>${t.tanggal} <span class="bdg ${t.tipe}">${t.tipe}</span></span><span>${t.tipe==='DIVIDEN'?mn(t.harga,t.currency):nf.format(t.qty)+' × '+mn(t.harga,t.currency)}</span></div>`).join('')||'<p class="mut">Belum ada transaksi.</p>'}
  <button class="btn s" onclick="closeSheet()">Tutup</button>`);
 }
+S.ex={};
+function jenisCard(c){
+ const G={};c.hold.forEach(h=>{const g=G[h.jenis]||(G[h.jenis]={j:h.jenis,nilai:0,modal:0,pl:0,it:[]});g.nilai+=h.nilai;g.modal+=h.modal;g.pl+=h.pl;g.it.push(h);});
+ const L=Object.values(G).sort((a,b)=>b.nilai-a.nilai),N=c.nilai||1;
+ return`<div class="card" id="ac"><div class="row"><h4 style="margin:0">Nilai investasi per jenis</h4><b>${rp(c.nilai)}</b></div>
+ ${L.map((g,i)=>{const pct=g.modal?g.pl/g.modal*100:0,open=!!S.ex[g.j];return`<div style="border-top:1px solid var(--bd);margin-top:${i?0:10}px">
+  <div class="row" style="padding:12px 0;cursor:pointer" data-j="${g.j}" onclick="S.ex[this.dataset.j]=!S.ex[this.dataset.j];$('#ac').outerHTML=jenisCard(calc())">
+   <div style="display:flex;gap:10px;align-items:center;min-width:0"><i style="flex:none;width:11px;height:11px;border-radius:50%;background:${WR[g.j]}"></i><div style="min-width:0"><b>${JN[g.j]}</b><div class="mut" style="font-size:12px">${g.it.length} aset · ${nf.format(g.nilai/N*100)}% ${open?'▾':'▸'}</div></div></div>
+   <div style="text-align:right"><b>${rp(g.nilai)}</b><div class="${cl(g.pl)}" style="font-size:12px">${g.pl>=0?'▲':'▼'} ${pc(pct)} · ${rp(g.pl)}</div></div></div>
+  ${open?g.it.map(h=>`<div class="row" style="padding:8px 0 8px 21px;cursor:pointer;font-size:13px" data-t="${esc(h.ticker)}" onclick="assetView(this.dataset.t)"><span><b>${esc(h.ticker)}</b> <span class="mut">${nf.format(h.qty)} unit</span></span><span style="text-align:right">${rp(h.nilai)} <span class="${cl(h.pl)}">${pc(h.pct)}</span></span></div>`).join(''):''}</div>`;}).join('')||'<p class="mut" style="margin-top:8px">Belum ada investasi. Rekam transaksi BUY untuk melihatnya di sini.</p>'}
+ <p class="mut" style="font-size:12px;margin-top:8px">Ketuk jenis untuk melihat rincian asetnya. Kas tidak termasuk, lihat kartu saldo kas.</p></div>`;
+}
 function dash(){
  const c=calc(),W=300,Hh=110,m=c.ms,mx=Math.max(1,...m.map(x=>Math.max(x.v,x.now||0))),
  X=i=>m.length>1?i*(W/(m.length-1)):W/2,Y=v=>Hh-6-(v/mx)*(Hh-18),
@@ -309,6 +327,7 @@ function dash(){
  <div class="g2"><div class="card"><div class="mut">Total investasi</div><b>${rp(c.modal)}</b></div><div class="card"><div class="mut">Saldo kas</div><b class="${c.kas<0?'dn':''}">${rp(c.kas)}</b></div>
  <div class="card"><div class="mut">Profit/Loss berjalan</div><b class="${cl(c.fl)}">${rp(c.fl)}</b></div><div class="card"><div class="mut">Profit/Loss terealisasi</div><b class="${cl(c.re)}">${rp(c.re)}</b></div>
  <div class="card"><div class="mut">Dividen diterima</div><b class="up">${rp(c.div)}</b></div><div class="card"><div class="mut">Total return</div><b class="${cl(c.fl+c.re+c.div)}">${rp(c.fl+c.re+c.div)}</b></div></div>
+ ${jenisCard(c)}
  <div class="card"><h4>Saldo kas per rekening</h4>${Object.entries(c.cash).filter(([n,v])=>Math.abs(v)>0.5).map(([n,v])=>`<div class="lg"><span>${esc(n||'-')}</span><b class="${v<0?'dn':''}">${rp(v)}</b></div>`).join('')||'<p class="mut">Belum ada saldo kas.</p>'}<div class="lg" style="border-top:1px solid var(--bd);margin-top:4px"><span class="mut">Biaya transaksi</span><b>${rp(c.bf)}</b></div><div class="lg"><span class="mut">Pajak</span><b>${rp(c.bp)}</b></div></div>
  ${growthCard(c)}
  ${pieCard()}
