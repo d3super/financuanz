@@ -128,12 +128,12 @@ function calc(){
    if(t.tipe==='WITHDRAW'){add(t.rdn,-I(amt,c));return;}
    if(t.tipe==='TRANSFER'){add(t.rdn,-I(amt,c));add(t.rdnTujuan,I(amt,c));return;}
    if(t.tipe==='DIVIDEN'){const v=I(amt,c);add(t.rdn,v);dd+=v;db[t.ticker]=(db[t.ticker]||0)+v;return;}
-   const h=H[t.ticker]||(H[t.ticker]={ticker:t.ticker,qty:0,cost:0,cur:c});bf+=I(fe,c);bp+=I(pj,c);fb[t.ticker]=(fb[t.ticker]||0)+I(fe+pj,c);
-   if(t.tipe==='BUY'){h.qty+=t.qty;h.cost+=amt+fe+pj;add(t.rdn,-I(amt+fe+pj,c));}
-   else{const av=h.qty?h.cost/h.qty:t.harga,sq=Math.min(t.qty,h.qty),f=t.qty?sq/t.qty:0;h.cost-=av*sq;h.qty-=sq;const g=I(t.harga*sq-(fe+pj)*f-av*sq,c);re+=g;rt[t.ticker]=(rt[t.ticker]||0)+g;add(t.rdn,I(amt-fe-pj,c));}
+   const h=H[t.ticker]||(H[t.ticker]={ticker:t.ticker,qty:0,cost:0,cx:0,cur:c});bf+=I(fe,c);bp+=I(pj,c);fb[t.ticker]=(fb[t.ticker]||0)+I(fe+pj,c);
+   if(t.tipe==='BUY'){h.qty+=t.qty;h.cost+=amt+fe+pj;h.cx+=amt;add(t.rdn,-I(amt+fe+pj,c));}
+   else{const av=h.qty?h.cost/h.qty:t.harga,sq=Math.min(t.qty,h.qty),f=t.qty?sq/t.qty:0;h.cost-=av*sq;h.cx-=(h.qty?h.cx/h.qty:0)*sq;h.qty-=sq;const g=I(t.harga*sq-(fe+pj)*f-av*sq,c);re+=g;rt[t.ticker]=(rt[t.ticker]||0)+g;add(t.rdn,I(amt-fe-pj,c));}
   });return{H,cash,re,dd,db,bf,bp,rt,fb};};
  const r=run(),hold=Object.values(r.H).filter(h=>h.qty>1e-9).map(h=>{
-  const a=A[h.ticker]||{},av=h.cost/h.qty,pr=a.harga!==''&&a.harga!=null?a.harga:av,cur=a.currency||h.cur,nilai=I(h.qty*pr,cur),modal=I(h.cost,cur);
+  const a=A[h.ticker]||{},av=(a.jenis==='SAHAM_US'?h.cx:h.cost)/h.qty,pr=a.harga!==''&&a.harga!=null?a.harga:av,cur=a.currency||h.cur,nilai=I(h.qty*pr,cur),modal=I(h.cost,cur);
   return{...h,jenis:a.jenis||'SAHAM_ID',nama:a.nama||h.ticker,avg:av,pr,cur,nilai,modal,pl:nilai-modal,div:r.db[h.ticker]||0,pct:modal?(nilai-modal)/modal*100:0};
  }).sort((a,b)=>b.nilai-a.nilai);
  const kas=Object.values(r.cash).reduce((a,b)=>a+b,0),nilai=hold.reduce((a,h)=>a+h.nilai,0),modal=hold.reduce((a,h)=>a+h.modal,0);
@@ -318,17 +318,17 @@ function priceSvg(P,pr){
 }
 function assetView(tk){
  const d=S.d,c=calc(),A=d.aset.find(x=>x.ticker===tk)||{},h=c.hold.find(x=>x.ticker===tk),all=d.transaksi.filter(t=>t.ticker===tk&&['BUY','SELL','DIVIDEN'].includes(t.tipe));
- let q=0,cost=0;const P=[];
+ const US=A.jenis==='SAHAM_US';let q=0,cost=0,cx=0;const P=[];
  [...all].sort((a,b)=>(a.tanggal+a.dibuat).localeCompare(b.tanggal+b.dibuat)).forEach(t=>{
-  if(t.tipe==='BUY'){q+=t.qty;cost+=t.qty*t.harga+(t.fee||0)+(t.pajak||0);}
-  else if(t.tipe==='SELL'){const av=q?cost/q:0,sq=Math.min(t.qty,q);cost-=av*sq;q-=sq;}
-  if(t.tipe!=='DIVIDEN')P.push({t:t.tanggal,p:t.harga,tp:t.tipe,avg:q>1e-9?cost/q:null});});
+  if(t.tipe==='BUY'){q+=t.qty;cost+=t.qty*t.harga+(t.fee||0)+(t.pajak||0);cx+=t.qty*t.harga;}
+  else if(t.tipe==='SELL'){const av=q?cost/q:0,sq=Math.min(t.qty,q);cost-=av*sq;cx-=(q?cx/q:0)*sq;q-=sq;}
+  if(t.tipe!=='DIVIDEN')P.push({t:t.tanggal,p:t.harga,tp:t.tipe,avg:q>1e-9?(US?cx:cost)/q:null});});
  const cur=A.currency||(all[0]&&all[0].currency)||'IDR',pr=A.harga!==''&&A.harga!=null?A.harga:null,T=Object.values(c.al).reduce((a,b)=>a+b,0)||1;
  const rl=c.rt[tk]||0,dv=c.db[tk]||0,tr=(h?h.pl:0)+rl+dv,row=(l,v,k='')=>`<div class="lg"><span class="mut">${l}</span><b class="${k}">${v}</b></div>`;
  sheet(`<h3>${esc(tk)}</h3><p class="mut" style="margin:-8px 0 12px">${esc(A.nama||tk)}${A.jenis?' · '+JN[A.jenis]:''}</p>
  <div class="row" style="margin-bottom:8px"><div><div class="mut">Harga kini</div><div class="big" style="font-size:26px">${pr!=null?mn(pr,cur):'-'}</div></div>${h?`<span class="chip ${cl(h.pl)}">${arr(h.pl)} ${pc(h.pct)}</span>`:'<span class="chip">Tidak dimiliki</span>'}</div>
  ${P.length?priceSvg(P,pr):''}
- <div class="card" style="margin-top:10px">${row('Jumlah (unit/lembar)',h?nf.format(h.qty):'0')}${h?row('Harga rata-rata',mn(h.avg,h.cur))+row('Modal',rp(h.modal))+row('Nilai saat ini',rp(h.nilai))+row('Porsi portofolio',nf.format(h.nilai/T*100)+'%')+row('Profit/loss berjalan',rp(h.pl),cl(h.pl)):''}${row('Profit/loss terealisasi',rp(rl),cl(rl))}${row('Dividen diterima',rp(dv),dv?'up':'')}${row('Biaya &amp; pajak',rp(c.fb[tk]||0))}${row('Total return',rp(tr),cl(tr))}</div>
+ <div class="card" style="margin-top:10px">${row('Jumlah (unit/lembar)',h?nf.format(h.qty):'0')}${h?row(US?'Harga rata-rata (tanpa biaya)':'Harga rata-rata',mn(h.avg,h.cur))+(US?row('Harga impas (termasuk biaya)',mn(h.cost/h.qty,h.cur)):'')+row('Modal',rp(h.modal))+row('Nilai saat ini',rp(h.nilai))+row('Porsi portofolio',nf.format(h.nilai/T*100)+'%')+row('Profit/loss berjalan',rp(h.pl),cl(h.pl)):''}${row('Profit/loss terealisasi',rp(rl),cl(rl))}${row('Dividen diterima',rp(dv),dv?'up':'')}${row('Biaya &amp; pajak',rp(c.fb[tk]||0))}${row('Total return',rp(tr),cl(tr))}</div>
  <div class="g2"><button class="btn" data-t="${esc(tk)}" onclick="txForm(null,{tipe:'BUY',ticker:this.dataset.t})">Beli</button><button class="btn s" data-t="${esc(tk)}" ${h?'':'disabled'} onclick="txForm(null,{tipe:'SELL',ticker:this.dataset.t})">Jual</button></div>
  <h4 style="margin-top:16px">Riwayat transaksi <span class="mut" style="font-weight:400">(ketuk untuk mengubah)</span></h4>${[...all].sort((a,b)=>(b.tanggal+b.dibuat).localeCompare(a.tanggal+a.dibuat)).map(t=>`<div class="lg" style="cursor:pointer" onclick="txForm('${t.id}')"><span>${t.tanggal} <span class="bdg ${t.tipe}">${t.tipe}</span></span><span>${t.tipe==='DIVIDEN'?mn(t.harga,t.currency):nf.format(t.qty)+' × '+mn(t.harga,t.currency)}</span></div>`).join('')||'<p class="mut">Belum ada transaksi.</p>'}
  <button class="btn s" onclick="closeSheet()">Tutup</button>`);
